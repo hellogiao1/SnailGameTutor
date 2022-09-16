@@ -230,6 +230,8 @@ void UUIQuestInfo::OnCompleteBtn_Down()
 void UUIQuestInfo::ResetDetail()
 {
 	ScrollBox_Cond->ClearChildren();
+	Btn_Accept->SetVisibility(ESlateVisibility::Hidden);
+	Btn_Complete->SetVisibility(ESlateVisibility::Hidden);
 	Btn_Complete->OnClicked.RemoveAll(this);
 	Btn_Accept->OnClicked.RemoveAll(this);
 }

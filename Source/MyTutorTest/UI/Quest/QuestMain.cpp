@@ -219,11 +219,21 @@ void UQuestMain::AddQuest(const FQuestDetail& Quest)
 	{
 		for (UWidget* It : SB_QuestList->GetAllChildren())
 		{
-			if (UUIQuestButton* CurrButton = Cast<UUIQuestButton>(It))
+			UUIQuestButton* CurrButton = Cast<UUIQuestButton>(It);
+			if (CurrButton && CurrButton->GetUniqueID() == Quest.UniqueID)
 			{
 				CurrButton->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 				CurrButton->PlayAnimFadeOut();
 			}
+		}
+	}
+
+	//Í¨Öª½ÇÉ«
+	if (ActiveWay == EActivateQuest::Other)
+	{
+		if (AQuestNPC* NPC = Cast<AQuestNPC>(Char))
+		{
+			NPC->CompareQuest();
 		}
 	}
 }

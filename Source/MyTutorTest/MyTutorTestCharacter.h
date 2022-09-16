@@ -31,7 +31,7 @@ class AMyTutorTestCharacter : public AMyCharacterBase
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget", meta = (AllowPrivateAccess = "true"))
 	class UWidgetComponent* HeadTipWidgetComp;
 
-	/** 任务组件 */
+	/** ??????? */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest", meta = (AllowPrivateAccess = "true"))
 	class UQuestComponent* QuestComp;
 public:
@@ -116,7 +116,7 @@ public:
 
 	FInterativeSignature InteractionEvent;
 
-	//按E键进行交互，在需要交互的地方进行委托绑定
+	//??E?????薪????????????????????????邪?
 	void OnInteractiveInput();
 
 	void OpenQuestUI();
@@ -125,7 +125,7 @@ public:
 	FORCEINLINE const AMyCharacterBase* GetNPCPtr() { return InteraCharacter; }
 
 private:
-	// TODO: ...ClampMax 如何设置为 ClampMax = MaxHP
+	// TODO: ...ClampMax ???????? ClampMax = MaxHP
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true", ClampMax = 100.f, ClampMin = 0.f), ReplicatedUsing = OnRep_UpdateUI)
 	float HP = 100.f;
 
@@ -141,7 +141,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class UUserWidget> UIDiedClass;
 
-	//保存一份使之交互NPC的对象指针，方便查询NPC身上的属性（在角色和NPC交互的的时候传入）
+	//?????????????NPC??????????????NPC????????????????NPC????????????
 	AMyCharacterBase* InteraCharacter;
 };
 
