@@ -10,6 +10,7 @@
 #include "Components/TextRenderComponent.h"
 #include "Components/BoxComponent.h"
 #include "../MyPlayerController.h"
+#include "../UI/Quest/QuestMain.h"
 
 
 AQuestNPC::AQuestNPC()
@@ -78,19 +79,11 @@ void AQuestNPC::InteractionEvent()
 	AMyPlayerController* LocalController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	if (LocalController)
 	{
-		AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-		if (MyCharacter == nullptr) return;
-
-		UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
-		if (QuestComp == nullptr) return;
-
-		//每次交互的时候去任务组件上查询未领取的任务
-		QuestComp->GetUnAcceptQuest(UnAcceptQuest, NPCQuests);
-		LocalController->InitQuestMain(UnAcceptQuest);
+		LocalController->SwitchQuestMain(this, EActivateQuest::Other);
 	}
 }
 
-void AQuestNPC::CompareQuest()
+void AQuestNPC::GetAcceptUnFinishQuests(TArray<FQuestDetail>& OutArray)
 {
 	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (MyCharacter == nullptr) return;
@@ -98,7 +91,41 @@ void AQuestNPC::CompareQuest()
 	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
 	if (QuestComp == nullptr) return;
 
-	if (QuestComp->GetAcceptAndUnComplete(AcceptUnCompletes, NPCQuests))
+	QuestComp->GetAcceptUnFinishQuest(OutArray, NPCQuests);
+}
+
+void AQuestNPC::GetUnAcceptQuests(TArray<FQuestDetail>& OutArray)
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr) return;
+
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr) return;
+
+	QuestComp->GetUnAcceptQuest(OutArray, NPCQuests);
+}
+
+void AQuestNPC::GetFinishQuests(TArray<FQuestDetail>& OutArray)
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr) return;
+
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr) return;
+
+	QuestComp->GetFinishQuestsForNPC(OutArray, NPCQuests);
+}
+
+void AQuestNPC::CompareQuest()
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr) 
+		return;
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr) 
+		return;
+
+	if (QuestComp->ExistAcceptUnFinish(NPCQuests))
 	{
 		//如果npc身上有玩家接取但是未完成的任务,显示问号图标
 		if (HeadTipWidgetComp && HeadTipWidgetComp->GetWidget())
@@ -110,7 +137,7 @@ void AQuestNPC::CompareQuest()
 			}
 		}
 	}
-	else if (QuestComp->GetUnAcceptQuest(UnAcceptQuest, NPCQuests))
+	else if (QuestComp->ExistUnAcceptQuest(NPCQuests))
 	{
 		//如果npc身上有玩家未接取的任务,显示感叹号图标
 		if (HeadTipWidgetComp && HeadTipWidgetComp->GetWidget())

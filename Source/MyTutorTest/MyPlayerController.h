@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Data/QuestData.h"
+#include "UI/Quest/QuestMain.h"
 #include "MyPlayerController.generated.h"
 
 /**
@@ -28,8 +29,7 @@ public:
 	/*任务界面相关函数*/
 	void ShowQuestMain(bool IsInteraction = false);
 	void CloseQuestMain();
-	void SwitchQuestMain(bool IsInteraction = false);
-	void InitQuestMain(const TArray<FQuestDetail>& UnAccept);
+	void SwitchQuestMain(AActor* Char, EActivateQuest NewWay);
 
 	//TODO 写一个UI管理栈，压栈出栈
 	TArray<UUserWidget*> UIStack;

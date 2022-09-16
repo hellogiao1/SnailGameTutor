@@ -29,7 +29,7 @@ public:
 	void GetQuests(TArray<FQuestDetail>& OutArray);
 	
 	//添加任务
-	void AddQuest(FQuestDetail Quest);
+	void AddQuest(const FQuestDetail& Quest);
 	
 	//删除任务
 	bool DeleteQuestForID(int32 ID);
@@ -48,9 +48,15 @@ public:
 
 	//玩家未接取的任务
 	bool GetUnAcceptQuest(TArray<FQuestDetail>& OutUnAccepts, const TArray<FQuestDetail>& InFinderQuests);
+	bool ExistUnAcceptQuest(const TArray<FQuestDetail>& InFinderQuests);
 
 	//玩家接取但是未完成的任务
-	bool GetAcceptAndUnComplete(TArray<FQuestDetail>& OutArray, const TArray<FQuestDetail>& InFinderQuests);
+	bool GetAcceptUnFinishQuest(TArray<FQuestDetail>& OutArray, const TArray<FQuestDetail>& InFinderQuests);
+	bool ExistAcceptUnFinish(const TArray<FQuestDetail>& InFinderQuests);
+
+	//玩家在NPC上已经完成的任务
+	bool GetFinishQuestsForNPC(TArray<FQuestDetail>& OutArray, const TArray<FQuestDetail>& InFinderQuests);
+	bool ExistFinishQuestForNPC(const TArray<FQuestDetail>& InFinderQuests);
 
 protected:
 	//玩家身上所有任务

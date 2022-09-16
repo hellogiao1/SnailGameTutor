@@ -24,7 +24,7 @@ void UUIQuestInfo::ShowQuestDetail(const FQuestDetail& QuestDetail)
 {
 	ResetDetail();
 	SetVisibility(ESlateVisibility::Visible);
-	MyQuest = QuestDetail;
+	MyQuest = &QuestDetail;
 
 	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (MyCharacter == nullptr) return;
@@ -36,33 +36,48 @@ void UUIQuestInfo::ShowQuestDetail(const FQuestDetail& QuestDetail)
 	Text_Name->SetText(FText::FromString(QuestDetail.QuestName));
 
 	//根据枚举更新 任务目标和任务进度
+	ObjectiveAndProgress(QuestDetail);
+
+	/** 任务领取条件 */
+	QuestCondition(QuestDetail);
+	
+}
+
+void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr) return;
+
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr) return;
+
 	FString ObjectiveStr = TEXT("任务目标：");
-	switch (QuestDetail.Objective.QuestTarget)
+	switch (Quest.Objective.QuestTarget)
 	{
 	case EQuestTarget::PickUpItem:
 	{
 		FString ObjectName(TEXT("\"未填写\""));
-		if (QuestDetail.Objective.Item)
+		if (Quest.Objective.Item)
 		{
-			QuestDetail.Objective.Item->GetName(ObjectName);
+			Quest.Objective.Item->GetName(ObjectName);
 		}
-		ObjectiveStr += FString::Printf(TEXT("拾取 %d 个 %s 物品"), QuestDetail.Objective.Count, *ObjectName);
+		ObjectiveStr += FString::Printf(TEXT("拾取 %d 个 %s 物品"), Quest.Objective.Count, *ObjectName);
 		break;
 	}
 	case EQuestTarget::Kill:
 	{
 		FString ObjectName(TEXT("\"未填写\""));
-		if (QuestDetail.Objective.NPC)
+		if (Quest.Objective.NPC)
 		{
-			QuestDetail.Objective.NPC->GetName(ObjectName);
+			Quest.Objective.NPC->GetName(ObjectName);
 		}
 
-		ObjectiveStr += FString::Printf(TEXT("击杀%d个 %s NPC"), QuestDetail.Objective.Count, *ObjectName);
+		ObjectiveStr += FString::Printf(TEXT("击杀%d个 %s NPC"), Quest.Objective.Count, *ObjectName);
 		break;
 	}
 	case EQuestTarget::GoToArea:
 	{
-		FString PosStr = QuestDetail.Objective.TargetPosition.ToString();
+		FString PosStr = Quest.Objective.TargetPosition.ToString();
 		ObjectiveStr += FString::Printf(TEXT("走到指定坐标点%s"), *PosStr);
 		break;
 	}
@@ -72,16 +87,22 @@ void UUIQuestInfo::ShowQuestDetail(const FQuestDetail& QuestDetail)
 	Text_Objective->SetText(FText::FromString(ObjectiveStr));
 
 	//任务奖励
-	Text_Reward->SetText(FText::FromString(TEXT("任务奖励：") + QuestDetail.QuestReward));
+	Text_Reward->SetText(FText::FromString(TEXT("任务奖励：") + Quest.QuestReward));
+}
 
-//////////////////////////////////////////////////////////////////////////
-	/** 任务领取条件 */
+void UUIQuestInfo::QuestCondition(const FQuestDetail& Quest)
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr) return;
+
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr) return;
 
 	//是否显示领取按钮
 	bool bShowAcceptBtn = true;
 	int8 Num = 1;
 
-	for (const FQuestAcceptCond& Cond : QuestDetail.QuestAcceptConds)
+	for (const FQuestAcceptCond& Cond : Quest.QuestAcceptConds)
 	{
 		FString CondInfo(FString::FromInt(Num++) + TEXT("、"));
 		UTextBlock* Text_AcceptCond = NewObject<UTextBlock>(this, UTextBlock::StaticClass());;
@@ -150,7 +171,8 @@ void UUIQuestInfo::ShowQuestDetail(const FQuestDetail& QuestDetail)
 		ScrollBox_Cond->AddChild(Text_AcceptCond);
 	}
 
-	if (!bIsActiveOpen && bShowAcceptBtn)
+	//当任务未领取，且符合领取条件则显示领取按钮
+	if ((QuestComp->ExistQuest(Quest.UniqueID) == false) && bShowAcceptBtn)
 	{
 		Btn_Complete->SetVisibility(ESlateVisibility::Hidden);
 
@@ -159,51 +181,55 @@ void UUIQuestInfo::ShowQuestDetail(const FQuestDetail& QuestDetail)
 	}
 }
 
-void UUIQuestInfo::ResetDetail()
-{
-	ScrollBox_Cond->ClearChildren();
-	Btn_Complete->OnClicked.RemoveAll(this);
-	Btn_Accept->OnClicked.RemoveAll(this);
-}
-
 void UUIQuestInfo::OnAcceptBtn_Down()
 {
 	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	if (MyCharacter == nullptr) 
+	if (MyCharacter == nullptr)
 		return;
 
 	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
-	if (QuestComp == nullptr) 
+	if (QuestComp == nullptr)
 		return;
 
-	if (QuestComp->ExistQuest(MyQuest.UniqueID) == false)
+	if (MyQuest == nullptr) return;
+
+	if (QuestComp->ExistQuest(MyQuest->UniqueID) == false)
 	{
-		QuestComp->AddQuest(MyQuest);
-		//任务名后添加已领取
-		Text_Name->SetText(FText::FromString(MyQuest.QuestName + TEXT("(已领取)")));
+		QuestComp->AddQuest(*MyQuest);
+		//任务名后添加"已领取"标识
+		Text_Name->SetText(FText::FromString(MyQuest->QuestName + TEXT("(已领取)")));
 		Btn_Accept->SetVisibility(ESlateVisibility::Hidden);
+
+		//通知事件
+		AddQuestEvent.ExecuteIfBound(*MyQuest);
 	}
 }
 
 void UUIQuestInfo::OnCompleteBtn_Down()
 {
 	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	if (MyCharacter == nullptr) 
+	if (MyCharacter == nullptr)
 		return;
 
 	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
-	if (QuestComp == nullptr) 
+	if (QuestComp == nullptr)
 		return;
 
-	if (QuestComp->ExistQuest(MyQuest.UniqueID))
+	if (MyQuest == nullptr) return;
+
+	if (QuestComp->ExistQuest(MyQuest->UniqueID))
 	{
-		QuestComp->GetQuestForID(MyQuest.UniqueID)->bIsComplete = true;
+		QuestComp->GetQuestForID(MyQuest->UniqueID)->bIsComplete = true;
 
 		Btn_Complete->SetVisibility(ESlateVisibility::Hidden);
+
+		CommitQuestEvent.ExecuteIfBound(*MyQuest);
 	}
 }
 
-void UUIQuestInfo::IsActiveOpen(bool Active)
+void UUIQuestInfo::ResetDetail()
 {
-	bIsActiveOpen = Active;
+	ScrollBox_Cond->ClearChildren();
+	Btn_Complete->OnClicked.RemoveAll(this);
+	Btn_Accept->OnClicked.RemoveAll(this);
 }

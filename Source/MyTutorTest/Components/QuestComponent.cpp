@@ -39,7 +39,7 @@ void UQuestComponent::GetQuests(TArray<FQuestDetail>& OutArray)
 	Quests.GenerateValueArray(OutArray);
 }
 
-void UQuestComponent::AddQuest(FQuestDetail NewQuest)
+void UQuestComponent::AddQuest(const FQuestDetail& NewQuest)
 {
 	Quests.Emplace(NewQuest.UniqueID, NewQuest);
 }
@@ -107,7 +107,19 @@ bool UQuestComponent::GetUnAcceptQuest(TArray<FQuestDetail>& OutUnAccepts, const
 	return flag;
 }
 
-bool UQuestComponent::GetAcceptAndUnComplete(TArray<FQuestDetail>& OutArray, const TArray<FQuestDetail>& InFinderQuests)
+bool UQuestComponent::ExistUnAcceptQuest(const TArray<FQuestDetail>& InFinderQuests)
+{
+	for (const auto& quest : InFinderQuests)
+	{
+		if (ExistQuest(quest.UniqueID) == false)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UQuestComponent::GetAcceptUnFinishQuest(TArray<FQuestDetail>& OutArray, const TArray<FQuestDetail>& InFinderQuests)
 {
 	OutArray.Reset();
 	bool flag = false;
@@ -115,10 +127,49 @@ bool UQuestComponent::GetAcceptAndUnComplete(TArray<FQuestDetail>& OutArray, con
 	{
 		if (ExistQuest(quest.UniqueID) && !quest.bIsComplete)
 		{
-			OutArray.Emplace(quest);
+			OutArray.Emplace(*GetQuestForID(quest.UniqueID));
 			flag = true;
 		}
 	}
 	return flag;
+}
+
+bool UQuestComponent::ExistAcceptUnFinish(const TArray<FQuestDetail>& InFinderQuests)
+{
+	for (const auto& quest : InFinderQuests)
+	{
+		if (ExistQuest(quest.UniqueID) && !quest.bIsComplete)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UQuestComponent::GetFinishQuestsForNPC(TArray<FQuestDetail>& OutArray, const TArray<FQuestDetail>& InFinderQuests)
+{
+	OutArray.Reset();
+	bool flag = false;
+	for (const auto& quest : InFinderQuests)
+	{
+		if (ExistQuest(quest.UniqueID) && quest.bIsComplete)
+		{
+			OutArray.Emplace(*GetQuestForID(quest.UniqueID));
+			flag = true;
+		}
+	}
+	return flag;
+}
+
+bool UQuestComponent::ExistFinishQuestForNPC(const TArray<FQuestDetail>& InFinderQuests)
+{
+	for (const auto& quest : InFinderQuests)
+	{
+		if (ExistQuest(quest.UniqueID) && quest.bIsComplete)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 

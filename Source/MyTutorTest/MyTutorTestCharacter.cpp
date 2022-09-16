@@ -219,7 +219,7 @@ void AMyTutorTestCharacter::OpenQuestUI()
 	AMyPlayerController* MyController = Cast<AMyPlayerController>(Controller);
 	if (MyController)
 	{
-		MyController->SwitchQuestMain();
+		MyController->SwitchQuestMain(this, EActivateQuest::Self);
 	}
 }
 

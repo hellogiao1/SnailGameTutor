@@ -45,3 +45,13 @@ void UUIQuestButton::SetButtonName(const FText& Name)
 		Text_BtnName->SetText(Name);
 	}
 }
+
+void UUIQuestButton::PlayAnimFadeOut()
+{
+	if (FadeOut == nullptr) return;
+
+	FWidgetAnimationDynamicEvent Delegate;
+	Delegate.BindDynamic(this, &UUIQuestButton::RemoveFromParent);
+	BindToAnimationEvent(FadeOut, Delegate, EWidgetAnimationEvent::Finished);
+	PlayAnimation(FadeOut);
+}

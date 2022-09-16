@@ -94,10 +94,6 @@ void AMyPlayerController::ShowQuestMain(bool IsInteraction /*= false*/)
 		QuestUI = CreateWidget<UQuestMain>(GetWorld(), BPQuestClass);
 		if (QuestUI)
 		{
-			if (IsInteraction)
-			{
-				QuestUI->InteractionView();
-			}
 			QuestUI->AddToViewport();
 		}
 	}
@@ -111,19 +107,7 @@ void AMyPlayerController::CloseQuestMain()
 	}
 }
 
-void AMyPlayerController::SwitchQuestMain(bool IsInteraction /*= false*/)
-{
-	if (QuestUI && QuestUI->IsInViewport())
-	{
-		QuestUI->RemoveFromParent();
-	}
-	else
-	{
-		ShowQuestMain(IsInteraction);
-	}
-}
-
-void AMyPlayerController::InitQuestMain(const TArray<FQuestDetail>& UnAccept)
+void AMyPlayerController::SwitchQuestMain(AActor* Char, EActivateQuest NewWay)
 {
 	if (QuestUI && QuestUI->IsInViewport())
 	{
@@ -137,9 +121,9 @@ void AMyPlayerController::InitQuestMain(const TArray<FQuestDetail>& UnAccept)
 			if (QuestUI)
 			{
 				QuestUI->AddToViewport();
-				QuestUI->InteractionView();
-				QuestUI->InitUnAcceptQuest(UnAccept);
+				QuestUI->SetTargetObject(Char, NewWay);
 			}
 		}
 	}
 }
+

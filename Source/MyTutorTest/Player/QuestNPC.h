@@ -40,8 +40,9 @@ public:
 	UFUNCTION()
 	void InteractionEvent();
 
-	FORCEINLINE const TArray<FQuestDetail>& GetAcceptUnCompletes() { return AcceptUnCompletes; }
-	FORCEINLINE const TArray<FQuestDetail>& GetUnAcceptQuest() { return UnAcceptQuest; }
+	void GetAcceptUnFinishQuests(TArray<FQuestDetail>& OutArray);
+	void GetUnAcceptQuests(TArray<FQuestDetail>& OutArray);
+	void GetFinishQuests(TArray<FQuestDetail>& OutArray);
 
 	//通过对比任务显示tip提示
 	void CompareQuest();
@@ -49,7 +50,4 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-private:
-	TArray<FQuestDetail> AcceptUnCompletes;
-	TArray<FQuestDetail> UnAcceptQuest;
 };

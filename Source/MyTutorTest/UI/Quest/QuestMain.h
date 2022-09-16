@@ -11,6 +11,12 @@ class UButton;
 class UScrollBox;
 class UUIQuestButton;
 
+enum class EActivateQuest : uint8
+{
+	Self,
+	Other,
+};
+
 /**
  * 
  */
@@ -43,6 +49,12 @@ public:
 
 	virtual void NativeConstruct() override;
 
+public:
+	//设置对象的指针
+	void SetTargetObject(AActor* NewChar, EActivateQuest NewWay);
+	FORCEINLINE AActor* GetTargetObject() { return Char; }
+
+private:
 	void InteractionView();
 
 	/** 按钮绑定事件 */
@@ -61,7 +73,7 @@ public:
 
 	//已经完成的任务
 	UFUNCTION()
-	void OnUnCompleteBtn_Down();
+	void OnCompleteBtn_Down();
 
 	//任务详情刷新
 	UFUNCTION()
@@ -70,10 +82,13 @@ public:
 	//给任务列表填充任务
 	void FillTaskList(const TArray<FQuestDetail>& Quests);
 
-	//设置对象的指针
-	void SetTargetObject(AActor* NewChar);
-	FORCEINLINE AActor* GetTargetObject() { return Char; }
+	//添加任务函数回调
+	void AddQuest(const FQuestDetail& Quest);
+	void CommitQuest(const FQuestDetail& Quest);
+
+	//完成任务函数回调
 
 private:
 	AActor* Char;
+	EActivateQuest ActiveWay;
 };

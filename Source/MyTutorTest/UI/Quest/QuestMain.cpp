@@ -37,10 +37,15 @@ void UQuestMain::NativeConstruct()
 	Btn_QuestComplete = Cast<UButton>(GetWidgetFromName(TEXT("Btn_QuestComplete")));
 	if (Btn_QuestComplete)
 	{
-		Btn_QuestComplete->OnClicked.AddDynamic(this, &UQuestMain::OnUnCompleteBtn_Down);
+		Btn_QuestComplete->OnClicked.AddDynamic(this, &UQuestMain::OnCompleteBtn_Down);
 	}
 
 	QuestDetail = Cast<UUIQuestInfo>(GetWidgetFromName(TEXT("QuestDetail")));
+	if (QuestDetail)
+	{
+		QuestDetail->AddQuestEvent.BindUObject(this, &UQuestMain::AddQuest);
+		QuestDetail->CommitQuestEvent.BindUObject(this, &UQuestMain::CommitQuest);
+	}
 	SB_QuestList = Cast<UScrollBox>(GetWidgetFromName(TEXT("SB_QuestList")));
 }
 
@@ -52,40 +57,37 @@ void UQuestMain::InteractionView()
 	{
 		Btn_QuestUnAccept->SetVisibility(ESlateVisibility::Visible);
 	}
-	
-	//同时隐藏其他按键
-	if (Btn_QuestAccept)
-	{
-		Btn_QuestAccept->SetVisibility(ESlateVisibility::Hidden);
-	}
-	
-	if (Btn_QuestDoing)
-	{
-		Btn_QuestDoing->SetVisibility(ESlateVisibility::Hidden);
-	}
 
-	if (Btn_QuestComplete)
-	{
-		Btn_QuestComplete->SetVisibility(ESlateVisibility::Hidden);
-	}
+	////同时隐藏其他按键
+	//if (Btn_QuestAccept)
+	//{
+	//	Btn_QuestAccept->SetVisibility(ESlateVisibility::Hidden);
+	//}
+	//
+	//if (Btn_QuestDoing)
+	//{
+	//	Btn_QuestDoing->SetVisibility(ESlateVisibility::Hidden);
+	//}
+
+	//if (Btn_QuestComplete)
+	//{
+	//	Btn_QuestComplete->SetVisibility(ESlateVisibility::Hidden);
+	//}
 }
 
 void UQuestMain::OnUnAcceptBtn_Down()
 {
 	UWidget* VerticalList = GetWidgetFromName(TEXT("VB_List"));
-	
+
 	if (Cast<AQuestNPC>(Char))
 	{
 		if (VerticalList)
 		{
 			VerticalList->SetVisibility(ESlateVisibility::Visible);
 
-			if (QuestDetail)
-			{
-				QuestDetail->IsActiveOpen(false);
-			}
-
-			FillTaskList(Cast<AQuestNPC>(Char)->GetUnAcceptQuest());
+			TArray<FQuestDetail> UnAcceptQuests;
+			Cast<AQuestNPC>(Char)->GetUnAcceptQuests(UnAcceptQuests);
+			FillTaskList(UnAcceptQuests);
 		}
 	}
 }
@@ -93,25 +95,40 @@ void UQuestMain::OnUnAcceptBtn_Down()
 void UQuestMain::OnAcceptBtn_Down()
 {
 	UWidget* VerticalList = GetWidgetFromName(TEXT("VB_List"));
-	if (VerticalList == nullptr) return;
-	//显示任务列表
-	VerticalList->SetVisibility(ESlateVisibility::Visible);
-	if (QuestDetail)
+	if (VerticalList)
 	{
-		QuestDetail->IsActiveOpen(true);
+		VerticalList->SetVisibility(ESlateVisibility::Visible);
 	}
 
-	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(Char);
-	if (MyCharacter == nullptr)
-		return;
+	switch (ActiveWay)
+	{
+	case EActivateQuest::Self:
+	{
+		AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(Char);
+		if (MyCharacter == nullptr)
+			return;
+		UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+		if (QuestComp == nullptr)
+			return;
 
-	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
-	if (QuestComp == nullptr) 
-		return;
-
-	TArray<FQuestDetail> AcceptUnCompletes;
-	QuestComp->FindQuestForNoComplete(AcceptUnCompletes);
-	FillTaskList(AcceptUnCompletes);
+		TArray<FQuestDetail> AcceptUnCompletes;
+		QuestComp->FindQuestForNoComplete(AcceptUnCompletes);
+		FillTaskList(AcceptUnCompletes);
+	}
+	break;
+	case EActivateQuest::Other:
+	{
+		TArray<FQuestDetail> AcceptUnCompletes;
+		if (AQuestNPC* Npc = Cast<AQuestNPC>(Char))
+		{
+			Npc->GetAcceptUnFinishQuests(AcceptUnCompletes);
+		}
+		FillTaskList(AcceptUnCompletes);
+	}
+	break;
+	default:
+		break;
+	}
 }
 
 void UQuestMain::OnDoingBtn_Down()
@@ -119,28 +136,42 @@ void UQuestMain::OnDoingBtn_Down()
 
 }
 
-void UQuestMain::OnUnCompleteBtn_Down()
+void UQuestMain::OnCompleteBtn_Down()
 {
 	UWidget* VerticalList = GetWidgetFromName(TEXT("VB_List"));
 	if (VerticalList == nullptr) return;
 	//显示任务列表
 	VerticalList->SetVisibility(ESlateVisibility::Visible);
-	if (QuestDetail)
+
+	switch (ActiveWay)
 	{
-		QuestDetail->IsActiveOpen(true);
+	case EActivateQuest::Self:
+	{
+		AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(Char);
+		if (MyCharacter == nullptr)
+			return;
+		UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+		if (QuestComp == nullptr)
+			return;
+
+		TArray<FQuestDetail> CompleteQuests;
+		QuestComp->FindQuestForComplete(CompleteQuests);
+		FillTaskList(CompleteQuests);
 	}
-
-	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(Char);
-	if (MyCharacter == nullptr)
-		return;
-
-	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
-	if (QuestComp == nullptr)
-		return;
-
-	TArray<FQuestDetail> CompleteQuests;
-	QuestComp->FindQuestForComplete(CompleteQuests);
-	FillTaskList(CompleteQuests);
+	break;
+	case EActivateQuest::Other:
+	{
+		TArray<FQuestDetail> CompleteQuests;
+		if (AQuestNPC* Npc = Cast<AQuestNPC>(Char))
+		{
+			Npc->GetFinishQuests(CompleteQuests);
+		}
+		FillTaskList(CompleteQuests);
+	}
+	break;
+	default:
+		break;
+	}
 }
 
 void UQuestMain::FlushQuestDetail(const FQuestDetail& Quest)
@@ -181,7 +212,34 @@ void UQuestMain::FillTaskList(const TArray<FQuestDetail>& Quests)
 	}
 }
 
-void UQuestMain::SetTargetObject(AActor* NewChar)
+void UQuestMain::AddQuest(const FQuestDetail& Quest)
+{
+	//刷新一下任务列表，播放按钮动画
+	if (SB_QuestList)
+	{
+		for (UWidget* It : SB_QuestList->GetAllChildren())
+		{
+			if (UUIQuestButton* CurrButton = Cast<UUIQuestButton>(It))
+			{
+				CurrButton->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+				CurrButton->PlayAnimFadeOut();
+			}
+		}
+	}
+}
+
+void UQuestMain::CommitQuest(const FQuestDetail& Quest)
+{
+
+}
+
+void UQuestMain::SetTargetObject(AActor* NewChar, EActivateQuest NewWay)
 {
 	Char = NewChar;
+	ActiveWay = NewWay;
+	//如果是NPC打开，则显示“可以领取任务”按钮
+	if (Cast<AQuestNPC>(Char) && ActiveWay == EActivateQuest::Other)
+	{
+		InteractionView();
+	}
 }

@@ -24,6 +24,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Text_BtnName;
 
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	class UWidgetAnimation* FadeOut;
+
 	FButtonClickSignature OnQuestBtnDown;
 
 	virtual void NativeConstruct() override;
@@ -38,6 +41,8 @@ public:
 	void SetQuestDetail(const FQuestDetail& Detail);
 
 	void SetButtonName(const FText& Name);
+
+	void PlayAnimFadeOut();
 
 private:
 	int32 UniqueID;

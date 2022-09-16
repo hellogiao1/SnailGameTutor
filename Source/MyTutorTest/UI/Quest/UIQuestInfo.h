@@ -10,6 +10,10 @@
 class UTextBlock;
 class UScrollBox;
 class UButton;
+
+DECLARE_DELEGATE_OneParam(FAddQuestSignature, const FQuestDetail&);
+DECLARE_DELEGATE_OneParam(FCommitQuestSignature, const FQuestDetail&);
+
 /**
  * 
  */
@@ -44,10 +48,11 @@ public:
 
 	void ShowQuestDetail(const FQuestDetail& QuestDetail);
 
-	void ResetDetail();
+	FAddQuestSignature AddQuestEvent;
+	FCommitQuestSignature CommitQuestEvent;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> TestClass;
+private:
+	void ResetDetail();
 
 	//领取任务
 	UFUNCTION()
@@ -57,12 +62,12 @@ public:
 	UFUNCTION()
 	void OnCompleteBtn_Down();
 
-	//设置打开任务的方式
-	void IsActiveOpen(bool Active);
+	//根据枚举更新 任务目标和任务进度
+	void ObjectiveAndProgress(const FQuestDetail& Quest);
+
+	//任务领取条件
+	void QuestCondition(const FQuestDetail& Quest);
 
 private:
-	FQuestDetail MyQuest;
-
-	//是否通过交互打开任务界面
-	bool bIsActiveOpen = false;
+	const FQuestDetail* MyQuest;
 };
