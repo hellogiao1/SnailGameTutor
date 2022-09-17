@@ -32,6 +32,8 @@ void AMyPlayerController::BeginPlay()
 			}
 			TutorChar->OnCharHit.AddUObject(UIStatusBar, &UUIPlayerProperty::SetHealthPercentage);
 			TutorChar->OnPropertyChange.AddUObject(UIStatusBar, &UUIPlayerProperty::SetCharProperty);
+
+			Push(UIStatusBar);
 		}
 
 		if (UIHUDClass)
@@ -40,6 +42,8 @@ void AMyPlayerController::BeginPlay()
 			if (UIHUD)
 			{
 				UIHUD->AddToViewport();
+				
+				Push(UIHUD, false);
 			}
 		}
 
@@ -55,17 +59,14 @@ UUIPlayerProperty* AMyPlayerController::GetUIStatusBar()
 
 void AMyPlayerController::ShowPlayerInfoUI()
 {
-	if (UIHUD && UIHUD->IsInViewport())
-	{
-		UIHUD->RemoveFromParent();
-	}
-
 	if (PlayerViewClass)
 	{
 		PlayerInfoView = CreateWidget<UUIPlayerInfoView>(GetWorld(), PlayerViewClass);
 		if (PlayerInfoView)
 		{
 			PlayerInfoView->AddToViewport();
+			
+			Push(PlayerInfoView);
 		}
 	}
 }
@@ -74,16 +75,7 @@ void AMyPlayerController::ClosePlayerInfoUI()
 {
 	if (PlayerInfoView && PlayerInfoView->IsInViewport())
 	{
-		PlayerInfoView->RemoveFromParent();
-	}
-
-	if (UIHUDClass)
-	{
-		UIHUD = CreateWidget<UUI_HUD>(GetWorld(), UIHUDClass);
-		if (UIHUD)
-		{
-			UIHUD->AddToViewport();
-		}
+		Pop();
 	}
 }
 
@@ -95,6 +87,8 @@ void AMyPlayerController::ShowQuestMain(bool IsInteraction /*= false*/)
 		if (QuestUI)
 		{
 			QuestUI->AddToViewport();
+
+			Push(QuestUI);
 		}
 	}
 }
@@ -103,7 +97,7 @@ void AMyPlayerController::CloseQuestMain()
 {
 	if (QuestUI && QuestUI->IsInViewport())
 	{
-		QuestUI->RemoveFromParent();
+		Pop();
 	}
 }
 
@@ -111,7 +105,7 @@ void AMyPlayerController::SwitchQuestMain(AActor* Char, EActivateQuest NewWay)
 {
 	if (QuestUI && QuestUI->IsInViewport())
 	{
-		QuestUI->RemoveFromParent();
+		Pop();
 	}
 	else
 	{
@@ -122,8 +116,56 @@ void AMyPlayerController::SwitchQuestMain(AActor* Char, EActivateQuest NewWay)
 			{
 				QuestUI->AddToViewport();
 				QuestUI->SetTargetObject(Char, NewWay);
+
+				Push(QuestUI);
 			}
 		}
+	}
+}
+
+void AMyPlayerController::Push(UUserWidget* Widget, bool Hidden, bool Throw)
+{
+	if (!UIStack.IsEmpty())
+	{
+		if (Throw)
+		{
+			UIStack.Pop()->RemoveFromParent();
+		}
+		else if (Hidden)
+		{
+			UIStack.Top()->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	if (Widget != nullptr)
+	{
+		UIStack.Emplace(Widget);
+	}
+}
+
+UUserWidget* AMyPlayerController::Pop()
+{
+	UUserWidget* TempWidget = nullptr;
+	if (!UIStack.IsEmpty())
+	{
+		TempWidget = UIStack.Top();
+		UIStack.Pop()->RemoveFromParent();
+		if (UIStack.Num() != 0)
+		{
+			UIStack.Top()->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+	return TempWidget;
+}
+
+void AMyPlayerController::CloseAllWidget(int32 IndexFromTheStart /* = -1*/)
+{
+	int32 Index = IndexFromTheStart <= -1 ? 0 : IndexFromTheStart + 1;
+
+	for (; Index < UIStack.Num(); ++Index)
+	{
+		UIStack[Index]->RemoveFromParent();
+		UIStack.RemoveAt(Index);
 	}
 }
 

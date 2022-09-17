@@ -31,6 +31,15 @@ public:
 	void CloseQuestMain();
 	void SwitchQuestMain(AActor* Char, EActivateQuest NewWay);
 
+	
+public:
+	void Push(UUserWidget* Widget = nullptr, bool Hidden = true, bool Throw = false);
+
+	UUserWidget* Pop();
+
+	void CloseAllWidget(int32 IndexFromTheStart = -1);
+
+private:
 	//TODO 写一个UI管理栈，压栈出栈
 	TArray<UUserWidget*> UIStack;
 
