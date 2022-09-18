@@ -38,9 +38,12 @@ void AQuestNPC::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 {
 	if (OtherActor->IsA<AMyTutorTestCharacter>())
 	{
-		TextRender->SetVisibility(true);
-		Cast<AMyTutorTestCharacter>(OtherActor)->InteractionEvent.BindUObject(this, &AQuestNPC::InteractionEvent);
-		Cast<AMyTutorTestCharacter>(OtherActor)->SetNPCPtr(this);
+		if (OtherActor == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+		{
+			TextRender->SetVisibility(true);
+			Cast<AMyTutorTestCharacter>(OtherActor)->InteractionEvent.BindUObject(this, &AQuestNPC::InteractionEvent);
+			Cast<AMyTutorTestCharacter>(OtherActor)->SetNPCPtr(this);
+		}
 	}
 
 }
@@ -49,15 +52,18 @@ void AQuestNPC::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 {
 	if (OtherActor->IsA<AMyTutorTestCharacter>())
 	{
-		TextRender->SetVisibility(false);
-		Cast<AMyTutorTestCharacter>(OtherActor)->InteractionEvent.Unbind();
-		Cast<AMyTutorTestCharacter>(OtherActor)->SetNPCPtr(nullptr);
-
-		//关闭UI窗口
-		AMyPlayerController* LocalController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-		if (LocalController)
+		if (OtherActor == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
 		{
-			LocalController->CloseQuestMain();
+			TextRender->SetVisibility(false);
+			Cast<AMyTutorTestCharacter>(OtherActor)->InteractionEvent.Unbind();
+			Cast<AMyTutorTestCharacter>(OtherActor)->SetNPCPtr(nullptr);
+
+			//关闭UI窗口
+			AMyPlayerController* LocalController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+			if (LocalController)
+			{
+				LocalController->CloseQuestMain();
+			}
 		}
 	}
 

@@ -75,7 +75,7 @@ struct FQuestDetail : public FTableRowBase
 	FString QuestName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FObjective Objective;
+	TArray<FObjective> Objectives;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString QuestReward;

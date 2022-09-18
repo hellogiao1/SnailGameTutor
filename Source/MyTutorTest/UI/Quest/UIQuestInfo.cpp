@@ -51,40 +51,45 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
 	if (QuestComp == nullptr) return;
 
-	FString ObjectiveStr = TEXT("任务目标：");
-	switch (Quest.Objective.QuestTarget)
+	FString ObjectiveStr; //= TEXT("任务目标：");
+	for (const auto& Objective : Quest.Objectives)
 	{
-	case EQuestTarget::PickUpItem:
-	{
-		FString ObjectName(TEXT("\"未填写\""));
-		if (Quest.Objective.Item)
+		switch (Objective.QuestTarget)
 		{
-			Quest.Objective.Item->GetName(ObjectName);
-		}
-		ObjectiveStr += FString::Printf(TEXT("拾取 %d 个 %s 物品"), Quest.Objective.Count, *ObjectName);
-		break;
-	}
-	case EQuestTarget::Kill:
-	{
-		FString ObjectName(TEXT("\"未填写\""));
-		if (Quest.Objective.NPC)
-		{
-			Quest.Objective.NPC->GetName(ObjectName);
-		}
+		case EQuestTarget::PickUpItem:
+			{
+				FString ObjectName(TEXT("\"未填写\""));
+				if (Objective.Item)
+				{
+					Objective.Item->GetName(ObjectName);
+				}
+				ObjectiveStr += FString::Printf(TEXT("拾取 %d 个 %s 物品"), Objective.Count, *ObjectName);
+				break;
+			}
+		case EQuestTarget::Kill:
+			{
+				FString ObjectName(TEXT("\"未填写\""));
+				if (Objective.NPC)
+				{
+					Objective.NPC->GetName(ObjectName);
+				}
 
-		ObjectiveStr += FString::Printf(TEXT("击杀%d个 %s NPC"), Quest.Objective.Count, *ObjectName);
-		break;
-	}
-	case EQuestTarget::GoToArea:
-	{
-		FString PosStr = Quest.Objective.TargetPosition.ToString();
-		ObjectiveStr += FString::Printf(TEXT("走到指定坐标点%s"), *PosStr);
-		break;
-	}
-	default:
-		break;
+				ObjectiveStr += FString::Printf(TEXT("击杀%d个 %s NPC"), Objective.Count, *ObjectName);
+				break;
+			}
+		case EQuestTarget::GoToArea:
+			{
+				FString PosStr = Objective.TargetPosition.ToString();
+				ObjectiveStr += FString::Printf(TEXT("走到指定坐标点%s"), *PosStr);
+				break;
+			}
+		default:
+			break;
+		}
+		ObjectiveStr += TEXT("\n");
 	}
 	Text_Objective->SetText(FText::FromString(ObjectiveStr));
+	
 
 	//任务奖励
 	Text_Reward->SetText(FText::FromString(TEXT("任务奖励：") + Quest.QuestReward));
@@ -145,16 +150,26 @@ void UUIQuestInfo::QuestCondition(const FQuestDetail& Quest)
 					}
 				}
 			}
+				
 			if (TempQuest)
 			{
 				CondInfo += FString::Printf(TEXT("需要先完成“ %s ”任务"), *(TempQuest->QuestName));
+				Text_AcceptCond->SetColorAndOpacity(TempQuest->bIsComplete ? FColor::Green : FColor::Red);
+				Text_AcceptCond->SetText(FText::FromString(CondInfo));
+
+				if (TempQuest->bIsComplete == false)
+				{
+					bShowAcceptBtn = false;
+				}
 			}
-			Text_AcceptCond->SetText(FText::FromString(CondInfo));
-			Text_AcceptCond->SetColorAndOpacity(TempQuest->bIsComplete ? FColor::Green : FColor::Red);
-			if (TempQuest->bIsComplete == false)
+			else if (TempQuest == nullptr)
 			{
+				CondInfo += TEXT("未查到任务，请确认任务ID是否输入正确");
+
+				Text_AcceptCond->SetText(FText::FromString(CondInfo));
 				bShowAcceptBtn = false;
 			}
+			
 			break;
 		}
 		case EQuestRecCond::ItemOwn:
