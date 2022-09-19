@@ -16,6 +16,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Components/QuestComponent.h"
 #include "MyPlayerController.h"
+#include "Player/QuestNPC.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMyTutorTestCharacter
@@ -69,6 +70,8 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 
 	//任务组件初始化
 	QuestComp = CreateDefaultSubobject<UQuestComponent>(TEXT("QuestComp"));
+
+	HitActor = nullptr;
 
 }
 
@@ -126,6 +129,48 @@ void AMyTutorTestCharacter::BeginPlay()
 			}
 		}
 	}
+}
+
+void AMyTutorTestCharacter::LineTraceInteraction()
+{
+	FVector StartLocation = FollowCamera->GetComponentLocation();
+	FVector EndLocation = StartLocation + (FollowCamera->GetComponentRotation().Vector() * TraceDistance);
+
+	FHitResult OutHit;
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLocation, EndLocation, ETraceTypeQuery::TraceTypeQuery4, false, {this}, EDrawDebugTrace::None, OutHit, true);
+
+	if (OutHit.bBlockingHit)
+	{
+		if (OutHit.GetActor() != HitActor)
+		{
+			if (AQuestNPC* NPC = Cast<AQuestNPC>(HitActor))
+			{
+				NPC->EndInteraction(this);
+			}
+
+			HitActor = OutHit.GetActor();
+			if (AQuestNPC* NPC = Cast<AQuestNPC>(HitActor))
+			{
+				NPC->InitInteraction(this);
+			}
+		}
+	}
+	else
+	{
+		if (AQuestNPC* NPC = Cast<AQuestNPC>(HitActor))
+		{
+			NPC->EndInteraction(this);
+		}
+		HitActor = nullptr;
+	}
+}
+
+
+void AMyTutorTestCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	LineTraceInteraction();
 }
 
 void AMyTutorTestCharacter::OnCharacterDamage_Implementation(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -227,6 +272,37 @@ void AMyTutorTestCharacter::OpenQuestUI()
 void AMyTutorTestCharacter::SetNPCPtr(const AMyCharacterBase* Character)
 {
 	InteraCharacter = const_cast<AMyCharacterBase*>(Character);
+}
+
+
+bool AMyTutorTestCharacter::ExistItem(UClass* ItemClass)
+{
+	for (AActor* Item : Inventory)
+	{
+		if (Item->GetClass() == ItemClass)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void AMyTutorTestCharacter::AddItem(AActor* Item)
+{
+	Inventory.Emplace(Item);
+}
+
+
+void AMyTutorTestCharacter::DeleteItem(AActor* Item)
+{
+	for (AActor* It : Inventory)
+	{
+		if (It == Item)
+		{
+			Inventory.Remove(It);
+		}
+	}
 }
 
 void AMyTutorTestCharacter::Died_Implementation()

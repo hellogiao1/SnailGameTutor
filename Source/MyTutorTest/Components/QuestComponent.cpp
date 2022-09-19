@@ -92,6 +92,18 @@ void UQuestComponent::FindQuestForNoComplete(TArray<FQuestDetail>& OutArray)
 	}
 }
 
+void UQuestComponent::FindOnProgresQuests(TArray<FQuestDetail>& OutArray)
+{
+	OutArray.Reset();
+	for (const auto& quest : Quests)
+	{
+		if (quest.Value.bIsProgress == true)
+		{
+			OutArray.Emplace(quest.Value);
+		}
+	}
+}
+
 bool UQuestComponent::GetUnAcceptQuest(TArray<FQuestDetail>& OutUnAccepts, const TArray<FQuestDetail>& InFinderQuests)
 {
 	OutUnAccepts.Reset();

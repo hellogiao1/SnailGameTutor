@@ -51,7 +51,10 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
 	if (QuestComp == nullptr) return;
 
+	bool bShowFinishBtn = true;
+
 	FString ObjectiveStr; //= TEXT("任务目标：");
+	FString ProgressStr; //= TEXT("任务进度：");
 	for (const auto& Objective : Quest.Objectives)
 	{
 		switch (Objective.QuestTarget)
@@ -63,7 +66,12 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 				{
 					Objective.Item->GetName(ObjectName);
 				}
+
 				ObjectiveStr += FString::Printf(TEXT("拾取 %d 个 %s 物品"), Objective.Count, *ObjectName);
+				ProgressStr += FString::Printf(TEXT("目前已经拾取 %d 个 %s 物品"), Objective.CurrCount, *ObjectName);
+
+				bShowFinishBtn = Objective.CurrCount == Objective.Count;
+
 				break;
 			}
 		case EQuestTarget::Kill:
@@ -75,21 +83,54 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 				}
 
 				ObjectiveStr += FString::Printf(TEXT("击杀%d个 %s NPC"), Objective.Count, *ObjectName);
+				ProgressStr += FString::Printf(TEXT("目前已经击杀%d个 %s NPC"), Objective.CurrCount, *ObjectName);
+
+				bShowFinishBtn = Objective.CurrCount == Objective.Count;
+
 				break;
 			}
 		case EQuestTarget::GoToArea:
 			{
 				FString PosStr = Objective.TargetPosition.ToString();
 				ObjectiveStr += FString::Printf(TEXT("走到指定坐标点%s"), *PosStr);
+				ProgressStr += Objective.bReach ? TEXT("已经走到指定坐标点") : TEXT("未走到指定坐标点");
+
+				bShowFinishBtn = Objective.bReach;
+
 				break;
 			}
 		default:
 			break;
 		}
 		ObjectiveStr += TEXT("\n");
+		ProgressStr += TEXT("\n");
 	}
 	Text_Objective->SetText(FText::FromString(ObjectiveStr));
+	Text_Progress->SetText(FText::FromString(ProgressStr));
 	
+	if (QuestComp->ExistQuest(Quest.UniqueID))
+	{
+		//达到任务要求，显示完成任务按钮
+		if (bShowFinishBtn)
+		{
+			Btn_Complete->SetVisibility(ESlateVisibility::Visible);
+			Btn_Complete->OnClicked.AddDynamic(this, &UUIQuestInfo::OnCompleteBtn_Down);
+		}
+		else
+		{
+			if (Quest.bIsProgress)
+			{
+				Btn_StopProgress->SetVisibility(ESlateVisibility::Visible);
+				Btn_StopProgress->OnClicked.AddDynamic(this, &UUIQuestInfo::OnStopProgressBtn_Down);
+			}
+			else
+			{
+				Btn_OnProgress->SetVisibility(ESlateVisibility::Visible);
+				Btn_OnProgress->OnClicked.AddDynamic(this, &UUIQuestInfo::OnProgressBtn_Down);
+			}
+		}
+		
+	}
 
 	//任务奖励
 	Text_Reward->SetText(FText::FromString(TEXT("任务奖励：") + Quest.QuestReward));
@@ -175,8 +216,15 @@ void UUIQuestInfo::QuestCondition(const FQuestDetail& Quest)
 		case EQuestRecCond::ItemOwn:
 		{
 			FString ItemName;
-			Cond.Item->GetName(ItemName);
+			if (Cond.Item)
+			{
+				Cond.Item->GetName(ItemName);
+				Text_AcceptCond->SetColorAndOpacity(MyCharacter->ExistItem(Cond.Item->GetClass()) ? FColor::Green : FColor::Red);
+				bShowAcceptBtn = MyCharacter->ExistItem(Cond.Item->GetClass());
+			}
 			CondInfo += FString::Printf(TEXT("需要先获取“ %s ”物品"), *ItemName);
+			
+			Text_AcceptCond->SetText(FText::FromString(CondInfo));
 			break;
 		}
 		default:
@@ -189,8 +237,6 @@ void UUIQuestInfo::QuestCondition(const FQuestDetail& Quest)
 	//当任务未领取，且符合领取条件则显示领取按钮
 	if ((QuestComp->ExistQuest(Quest.UniqueID) == false) && bShowAcceptBtn)
 	{
-		Btn_Complete->SetVisibility(ESlateVisibility::Hidden);
-
 		Btn_Accept->SetVisibility(ESlateVisibility::Visible);
 		Btn_Accept->OnClicked.AddDynamic(this, &UUIQuestInfo::OnAcceptBtn_Down);
 	}
@@ -235,18 +281,62 @@ void UUIQuestInfo::OnCompleteBtn_Down()
 	if (QuestComp->ExistQuest(MyQuest->UniqueID))
 	{
 		QuestComp->GetQuestForID(MyQuest->UniqueID)->bIsComplete = true;
-
 		Btn_Complete->SetVisibility(ESlateVisibility::Hidden);
-
 		CommitQuestEvent.ExecuteIfBound(*MyQuest);
+	}
+}
+
+void UUIQuestInfo::OnProgressBtn_Down()
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr)
+		return;
+
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr)
+		return;
+
+	if (MyQuest == nullptr) return;
+
+	if (QuestComp->ExistQuest(MyQuest->UniqueID))
+	{
+		QuestComp->GetQuestForID(MyQuest->UniqueID)->bIsProgress = true;
+		Btn_OnProgress->SetVisibility(ESlateVisibility::Hidden);
+		//CommitQuestEvent.ExecuteIfBound(*MyQuest);
+	}
+}
+
+void UUIQuestInfo::OnStopProgressBtn_Down()
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr)
+		return;
+
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr)
+		return;
+
+	if (MyQuest == nullptr) return;
+
+	if (QuestComp->ExistQuest(MyQuest->UniqueID))
+	{
+		QuestComp->GetQuestForID(MyQuest->UniqueID)->bIsProgress = false;
+		Btn_StopProgress->SetVisibility(ESlateVisibility::Hidden);
+		//CommitQuestEvent.ExecuteIfBound(*MyQuest);
 	}
 }
 
 void UUIQuestInfo::ResetDetail()
 {
 	ScrollBox_Cond->ClearChildren();
+
 	Btn_Accept->SetVisibility(ESlateVisibility::Hidden);
 	Btn_Complete->SetVisibility(ESlateVisibility::Hidden);
+	Btn_OnProgress->SetVisibility(ESlateVisibility::Hidden);
+	Btn_StopProgress->SetVisibility(ESlateVisibility::Hidden);
+
 	Btn_Complete->OnClicked.RemoveAll(this);
 	Btn_Accept->OnClicked.RemoveAll(this);
+	Btn_OnProgress->OnClicked.RemoveAll(this);
+	Btn_StopProgress->OnClicked.RemoveAll(this);
 }

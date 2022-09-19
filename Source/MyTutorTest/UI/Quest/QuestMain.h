@@ -82,9 +82,11 @@ private:
 	//给任务列表填充任务
 	void FillTaskList(const TArray<FQuestDetail>& Quests);
 
-	//添加任务函数回调
+	//DetailInfo 相关回调函数
 	void AddQuest(const FQuestDetail& Quest);
 	void CommitQuest(const FQuestDetail& Quest);
+	void OnProgressQuest(const FQuestDetail& Quest);
+	void StopProgressQuest(const FQuestDetail& Quest);
 
 	//完成任务函数回调
 

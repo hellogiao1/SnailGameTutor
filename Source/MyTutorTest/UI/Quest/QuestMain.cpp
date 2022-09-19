@@ -79,7 +79,7 @@ void UQuestMain::OnUnAcceptBtn_Down()
 {
 	UWidget* VerticalList = GetWidgetFromName(TEXT("VB_List"));
 
-	if (Cast<AQuestNPC>(Char))
+	if (ActiveWay == EActivateQuest::Other)
 	{
 		if (VerticalList)
 		{
@@ -118,6 +118,7 @@ void UQuestMain::OnAcceptBtn_Down()
 	break;
 	case EActivateQuest::Other:
 	{
+		//显示NPC上已领取的任务
 		TArray<FQuestDetail> AcceptUnCompletes;
 		if (AQuestNPC* Npc = Cast<AQuestNPC>(Char))
 		{
@@ -133,7 +134,22 @@ void UQuestMain::OnAcceptBtn_Down()
 
 void UQuestMain::OnDoingBtn_Down()
 {
+	UWidget* VerticalList = GetWidgetFromName(TEXT("VB_List"));
+	if (VerticalList)
+	{
+		VerticalList->SetVisibility(ESlateVisibility::Visible);
+	}
 
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (MyCharacter == nullptr)
+		return;
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr)
+		return;
+
+	TArray<FQuestDetail> OnProgressQuests;
+	QuestComp->FindOnProgresQuests(OnProgressQuests);
+	FillTaskList(OnProgressQuests);
 }
 
 void UQuestMain::OnCompleteBtn_Down()
@@ -228,7 +244,7 @@ void UQuestMain::AddQuest(const FQuestDetail& Quest)
 		}
 	}
 
-	//通知角色
+	//通知NPC更新相关的UI提示
 	if (ActiveWay == EActivateQuest::Other)
 	{
 		if (AQuestNPC* NPC = Cast<AQuestNPC>(Char))

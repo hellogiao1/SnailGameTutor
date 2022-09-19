@@ -61,6 +61,12 @@ struct FObjective : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (EditCondition = "QuestTarget != EQuestTarget::GoToArea", EditConditionHides, ClampMin = 1))
 	int32 Count = 1;
+
+	UPROPERTY()
+	int32 CurrCount = 0;
+
+	UPROPERTY()
+	bool bReach = false;
 };
 
 USTRUCT(BlueprintType)

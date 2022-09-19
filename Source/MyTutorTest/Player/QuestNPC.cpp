@@ -28,10 +28,10 @@ AQuestNPC::AQuestNPC()
 	TextRender->SetVerticalAlignment(EVRTA_TextTop);
 	TextRender->SetVisibility(false);
 
-	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+	/*BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->SetupAttachment(RootComponent);
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AQuestNPC::OnBoxBeginOverlap);
-	BoxCollision->OnComponentEndOverlap.AddDynamic(this, &AQuestNPC::OnBoxEndOverlap);
+	BoxCollision->OnComponentEndOverlap.AddDynamic(this, &AQuestNPC::OnBoxEndOverlap);*/
 }
 
 void AQuestNPC::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -67,6 +67,39 @@ void AQuestNPC::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		}
 	}
 
+}
+
+void AQuestNPC::InitInteraction(AActor* Target)
+{
+	if (Target->IsA<AMyTutorTestCharacter>())
+	{
+		if (Target == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+		{
+			TextRender->SetVisibility(true);
+			Cast<AMyTutorTestCharacter>(Target)->InteractionEvent.BindUObject(this, &AQuestNPC::InteractionEvent);
+			Cast<AMyTutorTestCharacter>(Target)->SetNPCPtr(this);
+		}
+	}
+}
+
+void AQuestNPC::EndInteraction(AActor* Target)
+{
+	if (Target->IsA<AMyTutorTestCharacter>())
+	{
+		if (Target == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+		{
+			TextRender->SetVisibility(false);
+			Cast<AMyTutorTestCharacter>(Target)->InteractionEvent.Unbind();
+			Cast<AMyTutorTestCharacter>(Target)->SetNPCPtr(nullptr);
+
+			//¹Ø±ÕUI´°¿Ú
+			AMyPlayerController* LocalController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+			if (LocalController)
+			{
+				LocalController->CloseQuestMain();
+			}
+		}
+	}
 }
 
 void AQuestNPC::BeginPlay()

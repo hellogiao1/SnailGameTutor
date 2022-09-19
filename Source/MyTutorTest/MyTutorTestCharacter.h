@@ -41,6 +41,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	float TurnRateGamepad;
 
+	UPROPERTY(EditAnywhere, Category = "DeBug")
+	float TraceDistance = 1000.f;
+
 protected:
 
 	/** Called for forwards/backward input */
@@ -73,6 +76,11 @@ protected:
 	// End of APawn interface
 
 	virtual void BeginPlay() override;
+
+	void LineTraceInteraction();
+
+public:
+	virtual void Tick(float DeltaTime) override;
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -124,6 +132,11 @@ public:
 	void SetNPCPtr(const AMyCharacterBase* Character);
 	FORCEINLINE const AMyCharacterBase* GetNPCPtr() { return InteraCharacter; }
 
+	/** Inventory Func */
+	bool ExistItem(UClass* ItemClass);
+	void AddItem(AActor* Item);
+	void DeleteItem(AActor* Item);
+
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true", ClampMax = 100.f, ClampMin = 0.f), ReplicatedUsing = OnRep_UpdateUI)
@@ -143,5 +156,10 @@ private:
 
 	//?????????????NPC??????????????NPC????????????????NPC????????????
 	AMyCharacterBase* InteraCharacter;
+
+	AActor* HitActor;
+
+	//临时的背包
+	TArray<AActor*> Inventory;
 };
 

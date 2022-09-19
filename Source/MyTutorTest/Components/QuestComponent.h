@@ -46,6 +46,9 @@ public:
 	//查找已经领取但未完成的任务
 	void FindQuestForNoComplete(TArray<FQuestDetail>& OutArray);
 
+	//查找正在进行的任务
+	void FindOnProgresQuests(TArray<FQuestDetail>& OutArray);
+
 	//玩家未接取的任务
 	bool GetUnAcceptQuest(TArray<FQuestDetail>& OutUnAccepts, const TArray<FQuestDetail>& InFinderQuests);
 	bool ExistUnAcceptQuest(const TArray<FQuestDetail>& InFinderQuests);

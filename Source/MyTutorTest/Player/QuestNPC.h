@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "MyCharacterBase.h"
 #include "../Data/QuestData.h"
+#include "../Interface/Interaction.h"
 #include "QuestNPC.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class MYTUTORTEST_API AQuestNPC : public AMyCharacterBase
+class MYTUTORTEST_API AQuestNPC : public AMyCharacterBase, public IInteraction
 {
 	GENERATED_BODY()
 
@@ -19,13 +20,13 @@ class MYTUTORTEST_API AQuestNPC : public AMyCharacterBase
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget", meta = (AllowPrivateAccess = "true"))
 	class UWidgetComponent* HeadTipWidgetComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collish", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BoxCollision;
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collish", meta = (AllowPrivateAccess = "true"))
+	class UBoxComponent* BoxCollision;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RenderText", meta = (AllowPrivateAccess = "true"))
 	class UTextRenderComponent* TextRender;
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Quest")
 	TArray<FQuestDetail> NPCQuests;
 
 public:
@@ -36,6 +37,10 @@ public:
 
 	UFUNCTION()
 	void OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	virtual void InitInteraction(AActor* Target) override;
+
+	virtual void EndInteraction(AActor* Target) override;
 
 	UFUNCTION()
 	void InteractionEvent();
