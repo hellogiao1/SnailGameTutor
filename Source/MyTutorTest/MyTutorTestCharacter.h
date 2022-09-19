@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/QuestData.h"
 #include "Player/MyCharacterBase.h"
 #include "MyTutorTestCharacter.generated.h"
 
@@ -136,6 +137,13 @@ public:
 	bool ExistItem(UClass* ItemClass);
 	void AddItem(AActor* Item);
 	void DeleteItem(AActor* Item);
+
+	//
+	UFUNCTION(BlueprintCallable, Category = "QuestFlush")
+	void AddQuestAsObject(EQuestTarget QuestTarget, TSubclassOf<AActor> TargetObject, int32 Count);
+
+	UFUNCTION(BlueprintCallable, Category = "QuestFlush")
+	void NotifyQuestReachPos(EQuestTarget QuestTarget, FVector TargetPosition, bool bReach);
 
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP

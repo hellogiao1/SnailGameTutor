@@ -61,6 +61,10 @@ public:
 	bool GetFinishQuestsForNPC(TArray<FQuestDetail>& OutArray, const TArray<FQuestDetail>& InFinderQuests);
 	bool ExistFinishQuestForNPC(const TArray<FQuestDetail>& InFinderQuests);
 
+	//拾取道具，刷新任务中的道具数量
+	void UpdateRequest(EQuestTarget QuestTarget, TSubclassOf<AActor> TargetObject, int32 Count);
+	void UpdateRequest(EQuestTarget QuestTarget, FVector TargetPosition, bool bReach);
+
 protected:
 	//玩家身上所有任务
 	TMap<int32, FQuestDetail> Quests;

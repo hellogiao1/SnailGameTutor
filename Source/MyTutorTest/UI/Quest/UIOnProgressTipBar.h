@@ -19,5 +19,8 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UVerticalBox* VB_OnProgress;
 
-	void InitQuestDetail(const FQuestDetail& Quest);
+	void InitQuestDetail(int32 ID);
+
+private:
+	int32 MyID;
 };

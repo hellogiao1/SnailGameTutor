@@ -185,3 +185,61 @@ bool UQuestComponent::ExistFinishQuestForNPC(const TArray<FQuestDetail>& InFinde
 	return false;
 }
 
+void UQuestComponent::UpdateRequest(EQuestTarget QuestTarget, TSubclassOf<AActor> TargetObject, int32 Count)
+{
+	switch (QuestTarget)
+	{
+	case EQuestTarget::PickUpItem:
+		{
+			for (auto& It : Quests)
+			{
+				for (auto& quest : It.Value.Objectives)
+				{
+					if (quest.QuestTarget == QuestTarget && quest.Item == TargetObject)
+					{
+						quest.CurrCount += Count;
+					}
+				}
+			}
+			break;
+		}
+	case EQuestTarget::Kill:
+		{
+			for (auto& It : Quests)
+			{
+				for (auto& quest : It.Value.Objectives)
+				{
+					if (quest.QuestTarget == QuestTarget && quest.NPC == TargetObject)
+					{
+						quest.CurrCount += Count;
+					}
+				}
+			}
+			break;	
+		}
+	case EQuestTarget::GoToArea:
+		{
+			
+			break;
+		}
+	default: ;
+	}
+}
+
+void UQuestComponent::UpdateRequest(EQuestTarget QuestTarget, FVector TargetPosition, bool bReach)
+{
+	if (QuestTarget == EQuestTarget::GoToArea)
+	{
+		for (auto& It : Quests)
+		{
+			for (auto& quest : It.Value.Objectives)
+			{
+				if (quest.QuestTarget == QuestTarget && quest.TargetPosition == TargetPosition)
+				{
+					quest.bReach = bReach;
+				}
+			}
+		}
+	}
+}
+

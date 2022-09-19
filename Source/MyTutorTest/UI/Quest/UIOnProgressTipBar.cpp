@@ -10,7 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 
 
-void UUIOnProgressTipBar::InitQuestDetail(const FQuestDetail& Quest)
+void UUIOnProgressTipBar::InitQuestDetail(int32 ID)
 {
 	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (MyCharacter == nullptr) return;
@@ -18,10 +18,17 @@ void UUIOnProgressTipBar::InitQuestDetail(const FQuestDetail& Quest)
 	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
 	if (QuestComp == nullptr) return;
 
-	bool bShowFinishBtn = true;
+	MyID = ID == -1 ? MyID : ID;
 
-	FString ObjectiveStr; //= TEXT("ÈÎÎñÄ¿±ê£º");
-	FString ProgressStr; //= TEXT("ÈÎÎñ½ø¶È£º");
+	FQuestDetail Quest;
+	if (QuestComp->ExistQuest(MyID))
+	{
+		Quest = *QuestComp->GetQuestForID(MyID);
+	}
+
+	VB_OnProgress->ClearChildren();
+	FString ObjectiveStr; //= TEXT("ä»»åŠ¡ç›®æ ‡ï¼š");
+	FString ProgressStr; //= TEXT("ä»»åŠ¡è¿›åº¦ï¼š");
 	for (const auto& Objective : Quest.Objectives)
 	{
 		UTextBlock* Text_Objective = NewObject<UTextBlock>(this, UTextBlock::StaticClass());;
@@ -31,36 +38,36 @@ void UUIOnProgressTipBar::InitQuestDetail(const FQuestDetail& Quest)
 		{
 		case EQuestTarget::PickUpItem:
 		{
-			FString ObjectName(TEXT("\"Î´ÌîĞ´\""));
+			FString ObjectName(TEXT("\"æœªå¡«å†™\""));
 			if (Objective.Item)
 			{
 				Objective.Item->GetName(ObjectName);
 			}
 
-			ObjectiveStr += FString::Printf(TEXT("Ê°È¡ %d ¸ö %s ÎïÆ·  %d / %%d"), Objective.Count, *ObjectName, Objective.CurrCount, Objective.Count);
-			//ProgressStr += FString::Printf(TEXT("Ä¿Ç°ÒÑ¾­Ê°È¡ %d ¸ö %s ÎïÆ·"), Objective.CurrCount, *ObjectName);
+			ObjectiveStr += FString::Printf(TEXT("æ‹¾å– %d ä¸ª %s ç‰©å“  %d / %d"), Objective.Count, *ObjectName, Objective.CurrCount, Objective.Count);
+			//ProgressStr += FString::Printf(TEXT("ç›®å‰å·²ç»æ‹¾å– %d ä¸ª %s ç‰©å“"), Objective.CurrCount, *ObjectName);
 
 			break;
 		}
 		case EQuestTarget::Kill:
 		{
-			FString ObjectName(TEXT("\"Î´ÌîĞ´\""));
+			FString ObjectName(TEXT("\"æœªå¡«å†™\""));
 			if (Objective.NPC)
 			{
 				Objective.NPC->GetName(ObjectName);
 			}
 
-			ObjectiveStr += FString::Printf(TEXT("»÷É±%d¸ö %s NPC  %d / %%d"), Objective.Count, *ObjectName, Objective.CurrCount, Objective.Count);
-			//ProgressStr += FString::Printf(TEXT("Ä¿Ç°ÒÑ¾­»÷É±%d¸ö %s NPC"), Objective.CurrCount, *ObjectName);
+			ObjectiveStr += FString::Printf(TEXT("å‡»æ€%dä¸ª %s NPC  %d / %d"), Objective.Count, *ObjectName, Objective.CurrCount, Objective.Count);
+			//ProgressStr += FString::Printf(TEXT("ç›®å‰å·²ç»å‡»æ€%dä¸ª %s NPC"), Objective.CurrCount, *ObjectName);
 
 			break;
 		}
 		case EQuestTarget::GoToArea:
 		{
 			FString PosStr = Objective.TargetPosition.ToString();
-			FString Progress = Objective.bReach ? TEXT("ÒÑ¾­×ßµ½Ö¸¶¨×ø±êµã") : TEXT("Î´×ßµ½Ö¸¶¨×ø±êµã");
-			ObjectiveStr += FString::Printf(TEXT("×ßµ½Ö¸¶¨×ø±êµã%s   %s"), *PosStr, *Progress);
-			//ProgressStr += Objective.bReach ? TEXT("ÒÑ¾­×ßµ½Ö¸¶¨×ø±êµã") : TEXT("Î´×ßµ½Ö¸¶¨×ø±êµã");
+			FString Progress = Objective.bReach ? TEXT("å·²ç»èµ°åˆ°æŒ‡å®šåæ ‡ç‚¹") : TEXT("æœªèµ°åˆ°æŒ‡å®šåæ ‡ç‚¹");
+			ObjectiveStr += FString::Printf(TEXT("èµ°åˆ°æŒ‡å®šåæ ‡ç‚¹%s   %s"), *PosStr, *Progress);
+			//ProgressStr += Objective.bReach ? TEXT("å·²ç»èµ°åˆ°æŒ‡å®šåæ ‡ç‚¹") : TEXT("æœªèµ°åˆ°æŒ‡å®šåæ ‡ç‚¹");
 
 			break;
 		}

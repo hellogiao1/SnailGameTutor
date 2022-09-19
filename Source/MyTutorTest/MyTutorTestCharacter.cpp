@@ -68,7 +68,7 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 	HeadTipWidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	HeadTipWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
 
-	//任务组件初始化
+	//????????????
 	QuestComp = CreateDefaultSubobject<UQuestComponent>(TEXT("QuestComp"));
 
 	HitActor = nullptr;
@@ -108,11 +108,11 @@ void AMyTutorTestCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 2、GetplayerPawn
+	// 2??GetplayerPawn
 	if (!HasAuthority() )
 	{
 
-		//// 明天测试一下UGamePlayerStatic
+		//// ??????????UGamePlayerStatic
 		//APawn* Pawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 		//if (Pawn)
 		//{
@@ -226,7 +226,7 @@ void AMyTutorTestCharacter::OnRep_UpdateUI()
 		}
 	}
 
-	//客户端特定的功能
+	//?????????????
 	if (IsLocallyControlled())
 	{
 		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), HP);
@@ -239,16 +239,16 @@ void AMyTutorTestCharacter::OnRep_UpdateUI()
 		}
 	}
 
-	//服务器特定的功能
+	//??????????????
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), HP);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 	}
 
-	//在所有机器上都执行的函数。 
+	//?????л????????е?????? 
 	/*
-		因任何因伤害或死亡而产生的特殊功能都应放在这里。
+		???κ????????????????????????????????????
 	*/
 }
 
@@ -301,6 +301,30 @@ void AMyTutorTestCharacter::DeleteItem(AActor* Item)
 		if (It == Item)
 		{
 			Inventory.Remove(It);
+		}
+	}
+}
+
+void AMyTutorTestCharacter::AddQuestAsObject(EQuestTarget QuestTarget, TSubclassOf<AActor> TargetObject, int32 Count)
+{
+	if (QuestComp)
+	{
+		QuestComp->UpdateRequest(QuestTarget, TargetObject, Count);
+		if (AMyPlayerController* PlayerController = Cast<AMyPlayerController>(GetController()))
+		{
+			PlayerController->ShowOnProgressQuest();
+		}
+	}
+}
+
+void AMyTutorTestCharacter::NotifyQuestReachPos(EQuestTarget QuestTarget, FVector TargetPosition, bool bReach)
+{
+	if (QuestComp)
+	{
+		QuestComp->UpdateRequest(QuestTarget, TargetPosition, bReach);
+		if (AMyPlayerController* PlayerController = Cast<AMyPlayerController>(GetController()))
+		{
+			PlayerController->ShowOnProgressQuest();
 		}
 	}
 }

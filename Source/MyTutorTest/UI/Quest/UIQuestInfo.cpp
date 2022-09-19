@@ -302,7 +302,7 @@ void UUIQuestInfo::OnProgressBtn_Down()
 	{
 		QuestComp->GetQuestForID(MyQuest->UniqueID)->bIsProgress = true;
 		Btn_OnProgress->SetVisibility(ESlateVisibility::Hidden);
-		//CommitQuestEvent.ExecuteIfBound(*MyQuest);
+		OnProgressEvent.ExecuteIfBound(*MyQuest);
 	}
 }
 
@@ -322,7 +322,7 @@ void UUIQuestInfo::OnStopProgressBtn_Down()
 	{
 		QuestComp->GetQuestForID(MyQuest->UniqueID)->bIsProgress = false;
 		Btn_StopProgress->SetVisibility(ESlateVisibility::Hidden);
-		//CommitQuestEvent.ExecuteIfBound(*MyQuest);
+		StopProgressEvent.ExecuteIfBound(*MyQuest);
 	}
 }
 

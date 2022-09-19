@@ -31,11 +31,16 @@ public:
 	void CloseQuestMain();
 	void SwitchQuestMain(AActor* Char, EActivateQuest NewWay);
 
+	/** 任务追踪界面*/
+	void ShowOnProgressQuest(int32 ID = -1);
+	void CloseProgressQuest();
 	
 public:
 	void Push(UUserWidget* Widget = nullptr, bool Hidden = true, bool Throw = false);
 
 	UUserWidget* Pop();
+
+	void SwapUI(UUserWidget* Widget);
 
 	void CloseAllWidget(int32 IndexFromTheStart = -1);
 
@@ -56,6 +61,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "UIClass", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class UQuestMain> BPQuestClass;
 
+	UPROPERTY(EditAnywhere, Category = "UIClass", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class UUIOnProgressTipBar> BPProgressClass;
+
 	class UUIPlayerInfoView* PlayerInfoView;
 
 	class UUIPlayerProperty* UIStatusBar;
@@ -65,4 +73,6 @@ private:
 	class AMyTutorTestCharacter* TutorChar;
 
 	class UQuestMain* QuestUI;
+
+	class UUIOnProgressTipBar* ProgressUI;
 };

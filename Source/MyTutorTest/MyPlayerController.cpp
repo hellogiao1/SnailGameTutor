@@ -3,10 +3,12 @@
 
 #include "MyPlayerController.h"
 #include "MyTutorTestCharacter.h"
+#include "Components/QuestComponent.h"
 #include "UI/UI_PlayerProperty.h"
 #include "UI/UI_HUD.h"
 #include "UI/UIPlayerInfoView.h"
 #include "UI/Quest/QuestMain.h"
+#include "UI/Quest/UIOnProgressTipBar.h"
 
 void AMyPlayerController::BeginPlay()
 {
@@ -73,7 +75,7 @@ void AMyPlayerController::ShowPlayerInfoUI()
 
 void AMyPlayerController::ClosePlayerInfoUI()
 {
-	if (PlayerInfoView && PlayerInfoView->IsInViewport())
+	if (PlayerInfoView && UIStack.Top() == PlayerInfoView)
 	{
 		Pop();
 	}
@@ -103,7 +105,7 @@ void AMyPlayerController::CloseQuestMain()
 
 void AMyPlayerController::SwitchQuestMain(AActor* Char, EActivateQuest NewWay)
 {
-	if (QuestUI && QuestUI->IsInViewport())
+	if (UIStack.Top() == QuestUI)
 	{
 		Pop();
 	}
@@ -120,6 +122,22 @@ void AMyPlayerController::SwitchQuestMain(AActor* Char, EActivateQuest NewWay)
 				Push(QuestUI);
 			}
 		}
+	}
+}
+
+void AMyPlayerController::ShowOnProgressQuest(int32 ID)
+{
+	if (UIHUD)
+	{
+		UIHUD->ShowProgressView(ID);
+	}
+}
+
+void AMyPlayerController::CloseProgressQuest()
+{
+	if (UIHUD)
+	{
+		UIHUD->CloseProgressView();
 	}
 }
 
@@ -156,6 +174,13 @@ UUserWidget* AMyPlayerController::Pop()
 		}
 	}
 	return TempWidget;
+}
+
+void AMyPlayerController::SwapUI(UUserWidget* Widget)
+{
+	UUserWidget* Temp = UIStack.Pop();
+	Push(Widget);
+	Push(Temp);
 }
 
 void AMyPlayerController::CloseAllWidget(int32 IndexFromTheStart /* = -1*/)

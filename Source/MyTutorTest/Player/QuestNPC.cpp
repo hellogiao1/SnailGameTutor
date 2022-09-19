@@ -93,11 +93,11 @@ void AQuestNPC::EndInteraction(AActor* Target)
 			Cast<AMyTutorTestCharacter>(Target)->SetNPCPtr(nullptr);
 
 			//¹Ø±ÕUI´°¿Ú
-			AMyPlayerController* LocalController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+			/*AMyPlayerController* LocalController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 			if (LocalController)
 			{
 				LocalController->CloseQuestMain();
-			}
+			}*/
 		}
 	}
 }

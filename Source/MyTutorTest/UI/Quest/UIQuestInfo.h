@@ -64,26 +64,26 @@ public:
 private:
 	void ResetDetail();
 
-	//аЛх║хннЯ
+	//И╒├Е▐√Д╩╩Е┼║
 	UFUNCTION()
 	void OnAcceptBtn_Down();
 
-	//мЙЁихннЯ
+	//Е╝▄Ф┬░Д╩╩Е┼║
 	UFUNCTION()
 	void OnCompleteBtn_Down();
 
-	//в╥выхннЯ
+	//Х©╫Х╦╙Д╩╩Е┼║
 	UFUNCTION()
 	void OnProgressBtn_Down();
 
-	//х║оШв╥выхннЯ
+	//Е▐√Ф╤┬Х©╫Х╦╙Д╩╩Е┼║
 	UFUNCTION()
 	void OnStopProgressBtn_Down();
 
-	//╦Ы╬щц╤╬ы╦Эпб хннЯд©╠Й╨мхннЯ╫Ь╤х
+	//Ф═╧Ф█╝Ф· Д╦╬Ф⌡╢Ф√╟ Д╩╩Е┼║Г⌡╝Ф═┤Е▓▄Д╩╩Е┼║Х©⌡Е╨╕
 	void ObjectiveAndProgress(const FQuestDetail& Quest);
 
-	//хннЯаЛх║лУ╪Ч
+	//Д╩╩Е┼║И╒├Е▐√Ф²║Д╩╤
 	void QuestCondition(const FQuestDetail& Quest);
 
 private:

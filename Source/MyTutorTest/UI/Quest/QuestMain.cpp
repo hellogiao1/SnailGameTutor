@@ -8,6 +8,7 @@
 #include "UIQuestInfo.h"
 #include "MyTutorTest/Data/QuestData.h"
 #include "Kismet/GameplayStatics.h"
+#include "MyTutorTest/MyPlayerController.h"
 #include "MyTutorTest/MyTutorTestCharacter.h"
 #include "MyTutorTest/Components/QuestComponent.h"
 #include "MytutorTest/Player/QuestNPC.h"
@@ -45,6 +46,8 @@ void UQuestMain::NativeConstruct()
 	{
 		QuestDetail->AddQuestEvent.BindUObject(this, &UQuestMain::AddQuest);
 		QuestDetail->CommitQuestEvent.BindUObject(this, &UQuestMain::CommitQuest);
+		QuestDetail->OnProgressEvent.BindUObject(this, &UQuestMain::OnProgressQuest);
+		QuestDetail->StopProgressEvent.BindUObject(this, &UQuestMain::StopProgressQuest);
 	}
 	SB_QuestList = Cast<UScrollBox>(GetWidgetFromName(TEXT("SB_QuestList")));
 }
@@ -257,6 +260,19 @@ void UQuestMain::AddQuest(const FQuestDetail& Quest)
 void UQuestMain::CommitQuest(const FQuestDetail& Quest)
 {
 
+}
+
+void UQuestMain::OnProgressQuest(const FQuestDetail& Quest)
+{
+	AMyPlayerController* PlayerController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PlayerController)
+	{
+		PlayerController->ShowOnProgressQuest(Quest.UniqueID);
+	}
+}
+
+void UQuestMain::StopProgressQuest(const FQuestDetail& Quest)
+{
 }
 
 void UQuestMain::SetTargetObject(AActor* NewChar, EActivateQuest NewWay)

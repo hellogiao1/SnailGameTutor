@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UI_HUD.generated.h"
 
+struct FQuestDetail;
 /**
  * 
  */
@@ -18,8 +19,16 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Btn_PlayerInfo;
 
+	UPROPERTY(meta = (BindWidget))
+	class UUIOnProgressTipBar* WB_OnProgress;
+
 	virtual void NativeConstruct() override;
 
+	void ShowProgressView(int32 ID);
+
+	void CloseProgressView();
+
+private:
 	UFUNCTION()
 	void OnCharInfoBtn_Down();
 };
