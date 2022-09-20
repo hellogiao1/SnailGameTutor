@@ -4,6 +4,7 @@
 #include "UIQuestButton.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 
 void UUIQuestButton::NativeConstruct()
 {
@@ -15,7 +16,7 @@ void UUIQuestButton::NativeConstruct()
 
 void UUIQuestButton::OnQuestBtn_Down()
 {
-	OnQuestBtnDown.Broadcast(QuestDetail);
+	OnQuestBtnDown.ExecuteIfBound(QuestDetail);
 }
 
 int32 UUIQuestButton::GetUniqueID() const
@@ -26,6 +27,7 @@ int32 UUIQuestButton::GetUniqueID() const
 void UUIQuestButton::SetUniqueID(int32 ID)
 {
 	UniqueID = ID;
+	ResetCustomization();
 }
 
 const FQuestDetail& UUIQuestButton::GetQuestDetail()
@@ -54,4 +56,13 @@ void UUIQuestButton::PlayAnimFadeOut()
 	Delegate.BindDynamic(this, &UUIQuestButton::RemoveFromParent);
 	BindToAnimationEvent(FadeOut, Delegate, EWidgetAnimationEvent::Finished);
 	PlayAnimation(FadeOut);
+}
+
+void UUIQuestButton::ResetCustomization()
+{
+	SetVisibility(ESlateVisibility::Visible);
+	if (UVerticalBox* VB = Cast<UVerticalBox>(GetWidgetFromName(TEXT("VB_Btn"))))
+	{
+		VB->SetRenderScale(FVector2D(1.f, 1.f));
+	}
 }

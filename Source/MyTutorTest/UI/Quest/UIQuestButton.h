@@ -7,7 +7,7 @@
 #include "MyTutorTest/Data/QuestData.h"
 #include "UIQuestButton.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FButtonClickSignature, const FQuestDetail&);
+DECLARE_DELEGATE_OneParam(FButtonClickSignature, const FQuestDetail&);
 
 /**
  * 
@@ -43,6 +43,8 @@ public:
 	void SetButtonName(const FText& Name);
 
 	void PlayAnimFadeOut();
+
+	void ResetCustomization();
 
 private:
 	int32 UniqueID;
