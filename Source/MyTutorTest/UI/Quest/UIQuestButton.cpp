@@ -27,7 +27,6 @@ int32 UUIQuestButton::GetUniqueID() const
 void UUIQuestButton::SetUniqueID(int32 ID)
 {
 	UniqueID = ID;
-	ResetCustomization();
 }
 
 const FQuestDetail& UUIQuestButton::GetQuestDetail()
@@ -38,6 +37,7 @@ const FQuestDetail& UUIQuestButton::GetQuestDetail()
 void UUIQuestButton::SetQuestDetail(const FQuestDetail& Detail)
 {
 	QuestDetail = Detail;
+	ResetCustomization();
 }
 
 void UUIQuestButton::SetButtonName(const FText& Name)

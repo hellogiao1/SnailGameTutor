@@ -225,7 +225,10 @@ void UQuestMain::FillTaskList(const TArray<FQuestDetail>& Quests)
 				QuestBtn->SetUniqueID(quest.UniqueID);
 				QuestBtn->SetButtonName(FText::FromString(quest.QuestName));
 				QuestBtn->SetQuestDetail(quest);
-				QuestBtn->OnQuestBtnDown.BindUObject(this, &UQuestMain::FlushQuestDetail);
+				if (QuestBtn->OnQuestBtnDown.IsBound() == false)
+				{
+					QuestBtn->OnQuestBtnDown.BindUObject(this, &UQuestMain::FlushQuestDetail);
+				}
 
 				//把button任务添加到ScrollBox中
 				SB_QuestList->AddChild(QuestBtn);
