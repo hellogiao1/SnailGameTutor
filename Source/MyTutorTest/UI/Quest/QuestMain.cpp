@@ -219,6 +219,8 @@ void UQuestMain::FillTaskList(const TArray<FQuestDetail>& Quests)
 			UUIQuestButton* QuestBtn = CreateWidget<UUIQuestButton>(GetWorld(), BPQuestBtnClass);
 			if (QuestBtn)
 			{
+				QuestBtn->SetColorAndOpacity(FColor::MakeRandomColor());
+
 				QuestBtn->SetUniqueID(quest.UniqueID);
 				QuestBtn->SetButtonName(FText::FromString(quest.QuestName));
 				QuestBtn->SetQuestDetail(quest);
@@ -233,7 +235,7 @@ void UQuestMain::FillTaskList(const TArray<FQuestDetail>& Quests)
 
 void UQuestMain::AddQuest(const FQuestDetail& Quest)
 {
-	//刷新一下任务列表，播放按钮动画
+	//刷新一下任务列表，播放按钮动画，最后从当前任务列表中删除
 	if (SB_QuestList)
 	{
 		for (UWidget* It : SB_QuestList->GetAllChildren())
@@ -259,7 +261,25 @@ void UQuestMain::AddQuest(const FQuestDetail& Quest)
 
 void UQuestMain::CommitQuest(const FQuestDetail& Quest)
 {
+	//刷新一下任务列表，播放按钮动画，最后从当前任务列表中删除
+	if (SB_QuestList)
+	{
+		for (UWidget* It : SB_QuestList->GetAllChildren())
+		{
+			UUIQuestButton* CurrButton = Cast<UUIQuestButton>(It);
+			if (CurrButton && CurrButton->GetUniqueID() == Quest.UniqueID)
+			{
+				CurrButton->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+				CurrButton->PlayAnimFadeOut();
+			}
+		}
+	}
 
+	AMyPlayerController* PlayerController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PlayerController)
+	{
+		PlayerController->CloseProgressQuest();
+	}
 }
 
 void UQuestMain::OnProgressQuest(const FQuestDetail& Quest)
@@ -273,6 +293,11 @@ void UQuestMain::OnProgressQuest(const FQuestDetail& Quest)
 
 void UQuestMain::StopProgressQuest(const FQuestDetail& Quest)
 {
+	AMyPlayerController* PlayerController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PlayerController)
+	{
+		PlayerController->CloseProgressQuest();
+	}
 }
 
 void UQuestMain::SetTargetObject(AActor* NewChar, EActivateQuest NewWay)

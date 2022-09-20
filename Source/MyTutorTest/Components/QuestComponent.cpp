@@ -97,7 +97,7 @@ void UQuestComponent::FindOnProgresQuests(TArray<FQuestDetail>& OutArray)
 	OutArray.Reset();
 	for (const auto& quest : Quests)
 	{
-		if (quest.Value.bIsProgress == true)
+		if (quest.Value.bIsComplete == false && quest.Value.bIsProgress == true)
 		{
 			OutArray.Emplace(quest.Value);
 		}
@@ -137,7 +137,7 @@ bool UQuestComponent::GetAcceptUnFinishQuest(TArray<FQuestDetail>& OutArray, con
 	bool flag = false;
 	for (const auto& quest : InFinderQuests)
 	{
-		if (ExistQuest(quest.UniqueID) && !quest.bIsComplete)
+		if (ExistQuest(quest.UniqueID) && !GetQuestForID(quest.UniqueID)->bIsComplete)
 		{
 			OutArray.Emplace(*GetQuestForID(quest.UniqueID));
 			flag = true;
@@ -150,7 +150,7 @@ bool UQuestComponent::ExistAcceptUnFinish(const TArray<FQuestDetail>& InFinderQu
 {
 	for (const auto& quest : InFinderQuests)
 	{
-		if (ExistQuest(quest.UniqueID) && !quest.bIsComplete)
+		if (ExistQuest(quest.UniqueID) && !GetQuestForID(quest.UniqueID)->bIsComplete)
 		{
 			return true;
 		}
@@ -164,7 +164,7 @@ bool UQuestComponent::GetFinishQuestsForNPC(TArray<FQuestDetail>& OutArray, cons
 	bool flag = false;
 	for (const auto& quest : InFinderQuests)
 	{
-		if (ExistQuest(quest.UniqueID) && quest.bIsComplete)
+		if (ExistQuest(quest.UniqueID) && GetQuestForID(quest.UniqueID)->bIsComplete)
 		{
 			OutArray.Emplace(*GetQuestForID(quest.UniqueID));
 			flag = true;
@@ -177,7 +177,7 @@ bool UQuestComponent::ExistFinishQuestForNPC(const TArray<FQuestDetail>& InFinde
 {
 	for (const auto& quest : InFinderQuests)
 	{
-		if (ExistQuest(quest.UniqueID) && quest.bIsComplete)
+		if (ExistQuest(quest.UniqueID) && GetQuestForID(quest.UniqueID)->bIsComplete)
 		{
 			return true;
 		}
@@ -193,13 +193,17 @@ void UQuestComponent::UpdateRequest(EQuestTarget QuestTarget, TSubclassOf<AActor
 		{
 			for (auto& It : Quests)
 			{
-				for (auto& quest : It.Value.Objectives)
+				if (It.Value.bIsComplete == false)
 				{
-					if (quest.QuestTarget == QuestTarget && quest.Item == TargetObject)
+					for (auto& quest : It.Value.Objectives)
 					{
-						quest.CurrCount += Count;
+						if (quest.QuestTarget == QuestTarget && quest.Item == TargetObject)
+						{
+							quest.CurrCount += Count;
+						}
 					}
 				}
+
 			}
 			break;
 		}
@@ -207,13 +211,17 @@ void UQuestComponent::UpdateRequest(EQuestTarget QuestTarget, TSubclassOf<AActor
 		{
 			for (auto& It : Quests)
 			{
-				for (auto& quest : It.Value.Objectives)
+				if (It.Value.bIsComplete == false)
 				{
-					if (quest.QuestTarget == QuestTarget && quest.NPC == TargetObject)
+					for (auto& quest : It.Value.Objectives)
 					{
-						quest.CurrCount += Count;
+						if (quest.QuestTarget == QuestTarget && quest.NPC == TargetObject)
+						{
+							quest.CurrCount += Count;
+						}
 					}
 				}
+				
 			}
 			break;	
 		}
@@ -232,13 +240,17 @@ void UQuestComponent::UpdateRequest(EQuestTarget QuestTarget, FVector TargetPosi
 	{
 		for (auto& It : Quests)
 		{
-			for (auto& quest : It.Value.Objectives)
+			if (It.Value.bIsComplete == false)
 			{
-				if (quest.QuestTarget == QuestTarget && quest.TargetPosition == TargetPosition)
+				for (auto& quest : It.Value.Objectives)
 				{
-					quest.bReach = bReach;
+					if (quest.QuestTarget == QuestTarget && quest.TargetPosition == TargetPosition)
+					{
+						quest.bReach = bReach;
+					}
 				}
 			}
+			
 		}
 	}
 }

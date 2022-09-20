@@ -143,7 +143,7 @@ public:
 	void AddQuestAsObject(EQuestTarget QuestTarget, TSubclassOf<AActor> TargetObject, int32 Count);
 
 	UFUNCTION(BlueprintCallable, Category = "QuestFlush")
-	void NotifyQuestReachPos(EQuestTarget QuestTarget, FVector TargetPosition, bool bReach);
+	void NotifyQuestReachPos(FVector TargetPosition, bool bReach);
 
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP

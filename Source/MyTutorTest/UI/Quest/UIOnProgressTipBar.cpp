@@ -12,6 +12,11 @@
 
 void UUIOnProgressTipBar::InitQuestDetail(int32 ID)
 {
+	if (VB_OnProgress)
+	{
+		VB_OnProgress->ClearChildren();
+	}
+
 	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (MyCharacter == nullptr) return;
 
@@ -19,18 +24,16 @@ void UUIOnProgressTipBar::InitQuestDetail(int32 ID)
 	if (QuestComp == nullptr) return;
 
 	MyID = ID == -1 ? MyID : ID;
+	if (!QuestComp->ExistQuest(MyID)) return;
 
-	FQuestDetail Quest;
-	if (QuestComp->ExistQuest(MyID))
-	{
-		Quest = *QuestComp->GetQuestForID(MyID);
-	}
+	FQuestDetail Quest = *QuestComp->GetQuestForID(MyID);
+	if (Quest.bIsComplete || Quest.bIsProgress == false) 
+		return;
 
-	VB_OnProgress->ClearChildren();
-	FString ObjectiveStr; //= TEXT("任务目标：");
 	FString ProgressStr; //= TEXT("任务进度：");
 	for (const auto& Objective : Quest.Objectives)
 	{
+		FString ObjectiveStr; //= TEXT("任务目标：");
 		UTextBlock* Text_Objective = NewObject<UTextBlock>(this, UTextBlock::StaticClass());;
 		//UTextBlock* Text_Progress = NewObject<UTextBlock>(this, UTextBlock::StaticClass());;
 
@@ -76,7 +79,22 @@ void UUIOnProgressTipBar::InitQuestDetail(int32 ID)
 		}
 		
 		Text_Objective->SetText(FText::FromString(ObjectiveStr));
+		Text_Objective->SetColorAndOpacity(FColor::MakeRandomColor());
 		
 		VB_OnProgress->AddChild(Text_Objective);
 	}
+}
+
+void UUIOnProgressTipBar::UpdateQuestDetail()
+{
+	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (MyCharacter == nullptr) return;
+
+	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
+	if (QuestComp == nullptr) return;
+
+	if (!QuestComp->ExistQuest(MyID)) return;
+
+	FQuestDetail Quest = *QuestComp->GetQuestForID(MyID);
+
 }

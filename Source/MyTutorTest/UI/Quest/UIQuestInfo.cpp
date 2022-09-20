@@ -70,7 +70,10 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 				ObjectiveStr += FString::Printf(TEXT("拾取 %d 个 %s 物品"), Objective.Count, *ObjectName);
 				ProgressStr += FString::Printf(TEXT("目前已经拾取 %d 个 %s 物品"), Objective.CurrCount, *ObjectName);
 
-				bShowFinishBtn = Objective.CurrCount == Objective.Count;
+				if (Objective.CurrCount < Objective.Count)
+				{
+					bShowFinishBtn = false;
+				}
 
 				break;
 			}
@@ -85,7 +88,10 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 				ObjectiveStr += FString::Printf(TEXT("击杀%d个 %s NPC"), Objective.Count, *ObjectName);
 				ProgressStr += FString::Printf(TEXT("目前已经击杀%d个 %s NPC"), Objective.CurrCount, *ObjectName);
 
-				bShowFinishBtn = Objective.CurrCount == Objective.Count;
+				if (Objective.CurrCount < Objective.Count)
+				{
+					bShowFinishBtn = false;
+				}
 
 				break;
 			}
@@ -95,7 +101,10 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 				ObjectiveStr += FString::Printf(TEXT("走到指定坐标点%s"), *PosStr);
 				ProgressStr += Objective.bReach ? TEXT("已经走到指定坐标点") : TEXT("未走到指定坐标点");
 
-				bShowFinishBtn = Objective.bReach;
+				if (Objective.bReach == false)
+				{
+					bShowFinishBtn = false;
+				}
 
 				break;
 			}
@@ -113,8 +122,11 @@ void UUIQuestInfo::ObjectiveAndProgress(const FQuestDetail& Quest)
 		//达到任务要求，显示完成任务按钮
 		if (bShowFinishBtn)
 		{
-			Btn_Complete->SetVisibility(ESlateVisibility::Visible);
-			Btn_Complete->OnClicked.AddDynamic(this, &UUIQuestInfo::OnCompleteBtn_Down);
+			if (Quest.bIsComplete == false)
+			{
+				Btn_Complete->SetVisibility(ESlateVisibility::Visible);
+				Btn_Complete->OnClicked.AddDynamic(this, &UUIQuestInfo::OnCompleteBtn_Down);
+			}
 		}
 		else
 		{

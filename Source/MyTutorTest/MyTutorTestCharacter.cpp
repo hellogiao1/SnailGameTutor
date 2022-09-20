@@ -317,11 +317,11 @@ void AMyTutorTestCharacter::AddQuestAsObject(EQuestTarget QuestTarget, TSubclass
 	}
 }
 
-void AMyTutorTestCharacter::NotifyQuestReachPos(EQuestTarget QuestTarget, FVector TargetPosition, bool bReach)
+void AMyTutorTestCharacter::NotifyQuestReachPos(FVector TargetPosition, bool bReach)
 {
 	if (QuestComp)
 	{
-		QuestComp->UpdateRequest(QuestTarget, TargetPosition, bReach);
+		QuestComp->UpdateRequest(EQuestTarget::GoToArea, TargetPosition, bReach);
 		if (AMyPlayerController* PlayerController = Cast<AMyPlayerController>(GetController()))
 		{
 			PlayerController->ShowOnProgressQuest();

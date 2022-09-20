@@ -21,6 +21,8 @@ public:
 
 	void InitQuestDetail(int32 ID);
 
+	void UpdateQuestDetail();
+
 private:
 	int32 MyID;
 };
