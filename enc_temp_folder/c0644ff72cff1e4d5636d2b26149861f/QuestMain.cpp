@@ -318,11 +318,11 @@ UUIQuestButton* UQuestMain::GetQuestBtnByPool()
 	{
 		for (PoolCount; PoolCount < QuestPool.Num(); ++PoolCount)
 		{
-			if (QuestPool[PoolCount] && QuestPool[PoolCount]->IsAnyAnimationPlaying())
+			if (QuestPool[PoolCount] && QuestPool[PoolCount]->IsAnimationPlaying(QuestPool[PoolCount]->FadeOut))
 			{
 				continue;
 			}
-			return QuestPool[PoolCount++];
+			return QuestPool[PoolCount];
 		}
 		goto label;
 	}
