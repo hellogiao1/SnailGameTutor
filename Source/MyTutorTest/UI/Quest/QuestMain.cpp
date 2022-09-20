@@ -212,11 +212,12 @@ void UQuestMain::FillTaskList(const TArray<FQuestDetail>& Quests)
 
 	//TODO 未存在任务的时候提示
 
+	PoolCount = 0;
 	for (const auto& quest : Quests)
 	{
 		if (BPQuestBtnClass)
 		{
-			UUIQuestButton* QuestBtn = CreateWidget<UUIQuestButton>(GetWorld(), BPQuestBtnClass);
+			UUIQuestButton* QuestBtn = GetQuestBtnByPool();
 			if (QuestBtn)
 			{
 				QuestBtn->SetColorAndOpacity(FColor::MakeRandomColor());
@@ -298,6 +299,26 @@ void UQuestMain::StopProgressQuest(const FQuestDetail& Quest)
 	{
 		PlayerController->CloseProgressQuest();
 	}
+}
+
+UUIQuestButton* UQuestMain::GetQuestBtnByPool()
+{
+	if (PoolCount >= QuestPool.Num())
+	{
+		if (BPQuestBtnClass)
+		{
+			UUIQuestButton* QuestBtn = CreateWidget<UUIQuestButton>(GetWorld(), BPQuestBtnClass);
+			QuestPool.Emplace(QuestBtn);
+			++PoolCount;
+			return QuestBtn;
+		}
+	}
+	else
+	{
+		return QuestPool[PoolCount++];
+	}
+
+	return nullptr;
 }
 
 void UQuestMain::SetTargetObject(AActor* NewChar, EActivateQuest NewWay)

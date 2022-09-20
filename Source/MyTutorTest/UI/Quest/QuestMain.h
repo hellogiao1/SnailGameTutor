@@ -88,7 +88,13 @@ private:
 	void OnProgressQuest(const FQuestDetail& Quest);
 	void StopProgressQuest(const FQuestDetail& Quest);
 
-	//完成任务函数回调
+public:
+	//quest pool
+	UUIQuestButton* GetQuestBtnByPool();
+	int32 PoolCount = 0;
+
+private:
+	TArray<UUIQuestButton*> QuestPool;
 
 private:
 	AActor* Char;
