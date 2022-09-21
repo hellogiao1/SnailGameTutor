@@ -22,6 +22,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UUIOnProgressTipBar* WB_OnProgress;
 
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Btn_OpenQuest;
+
 	virtual void NativeConstruct() override;
 
 	void ShowProgressView(int32 ID);
@@ -31,4 +34,7 @@ public:
 private:
 	UFUNCTION()
 	void OnCharInfoBtn_Down();
+
+	UFUNCTION()
+	void OnOpenBtn_Down();
 };

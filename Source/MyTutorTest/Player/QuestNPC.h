@@ -29,6 +29,9 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Quest")
 	TArray<FQuestDetail> NPCQuests;
 
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "NPC")
+	FText NPCName;
+
 public:
 	AQuestNPC();
 
@@ -54,5 +57,12 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+private:
+	UPROPERTY(EditAnywhere, Category = "UIClass", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class UUIAcceptQuest> BPAcceptQuestClass;
+
+	UPROPERTY()
+	class UUIAcceptQuest* AcceptUI;
 
 };

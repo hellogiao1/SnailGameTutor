@@ -44,6 +44,9 @@ public:
 	//UPROPERTY(meta = (BindWidget))
 	UScrollBox* SB_QuestList;
 
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Btn_CloseQuest;
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUIQuestButton> BPQuestBtnClass;
 
@@ -58,6 +61,9 @@ private:
 	void InteractionView();
 
 	/** 按钮绑定事件 */
+
+	UFUNCTION()
+	void OnCloseBtn_Down();
 
 	//可领取任务
 	UFUNCTION()
@@ -94,6 +100,8 @@ public:
 	int32 PoolCount = 0;
 
 private:
+
+	UPROPERTY()
 	TArray<UUIQuestButton*> QuestPool;
 
 private:

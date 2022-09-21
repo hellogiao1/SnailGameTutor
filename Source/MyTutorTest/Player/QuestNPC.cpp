@@ -11,6 +11,7 @@
 #include "Components/BoxComponent.h"
 #include "../MyPlayerController.h"
 #include "../UI/Quest/QuestMain.h"
+#include "../UI/Quest/Child/UIAcceptQuest.h"
 
 
 AQuestNPC::AQuestNPC()
@@ -73,11 +74,21 @@ void AQuestNPC::InitInteraction(AActor* Target)
 {
 	if (Target->IsA<AMyTutorTestCharacter>())
 	{
-		if (Target == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+		TextRender->SetVisibility(true);
+		Cast<AMyTutorTestCharacter>(Target)->InteractionEvent.BindUObject(this, &AQuestNPC::InteractionEvent);
+
+		if (BPAcceptQuestClass)
 		{
-			TextRender->SetVisibility(true);
-			Cast<AMyTutorTestCharacter>(Target)->InteractionEvent.BindUObject(this, &AQuestNPC::InteractionEvent);
-			Cast<AMyTutorTestCharacter>(Target)->SetNPCPtr(this);
+			AcceptUI = CreateWidget<UUIAcceptQuest>(GetWorld(), BPAcceptQuestClass);
+			if (AcceptUI)
+			{
+				AcceptUI->AddToViewport();
+				AcceptUI->SetWidgetName(NPCName);
+				if (AcceptUI->Btn_Interaction)
+				{
+					AcceptUI->Btn_Interaction->OnClicked.AddDynamic(this, &AQuestNPC::InteractionEvent);
+				}
+			}
 		}
 	}
 }
@@ -86,18 +97,12 @@ void AQuestNPC::EndInteraction(AActor* Target)
 {
 	if (Target->IsA<AMyTutorTestCharacter>())
 	{
-		if (Target == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
-		{
-			TextRender->SetVisibility(false);
-			Cast<AMyTutorTestCharacter>(Target)->InteractionEvent.Unbind();
-			Cast<AMyTutorTestCharacter>(Target)->SetNPCPtr(nullptr);
+		TextRender->SetVisibility(false);
+		Cast<AMyTutorTestCharacter>(Target)->InteractionEvent.Unbind();
 
-			//¹Ø±ÕUI´°¿Ú
-			/*AMyPlayerController* LocalController = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-			if (LocalController)
-			{
-				LocalController->CloseQuestMain();
-			}*/
+		if (AcceptUI)
+		{
+			AcceptUI->RemoveFromParent();
 		}
 	}
 }
@@ -158,10 +163,10 @@ void AQuestNPC::GetFinishQuests(TArray<FQuestDetail>& OutArray)
 void AQuestNPC::CompareQuest()
 {
 	AMyTutorTestCharacter* MyCharacter = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	if (MyCharacter == nullptr) 
+	if (MyCharacter == nullptr)
 		return;
 	UQuestComponent* QuestComp = MyCharacter->GetQuestComponent();
-	if (QuestComp == nullptr) 
+	if (QuestComp == nullptr)
 		return;
 
 	if (QuestComp->ExistAcceptUnFinish(NPCQuests))

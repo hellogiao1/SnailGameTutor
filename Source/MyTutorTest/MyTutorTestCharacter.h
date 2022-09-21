@@ -169,5 +169,7 @@ private:
 
 	//临时的背包
 	TArray<AActor*> Inventory;
+
+	FTimerHandle TraceTimerHandle;
 };
 

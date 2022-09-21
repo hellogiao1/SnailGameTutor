@@ -17,6 +17,11 @@ void UQuestMain::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	if (Btn_CloseQuest)
+	{
+		Btn_CloseQuest->OnClicked.AddDynamic(this, &UQuestMain::OnCloseBtn_Down);
+	}
+
 	Btn_QuestUnAccept = Cast<UButton>(GetWidgetFromName(TEXT("Btn_QuestUnAccept")));
 	if (Btn_QuestUnAccept)
 	{
@@ -76,6 +81,15 @@ void UQuestMain::InteractionView()
 	//{
 	//	Btn_QuestComplete->SetVisibility(ESlateVisibility::Hidden);
 	//}
+}
+
+void UQuestMain::OnCloseBtn_Down()
+{
+	AMyPlayerController* Controller = Cast<AMyPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (Controller)
+	{
+		Controller->CloseQuestMain();
+	}
 }
 
 void UQuestMain::OnUnAcceptBtn_Down()

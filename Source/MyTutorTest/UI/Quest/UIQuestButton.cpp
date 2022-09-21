@@ -10,7 +10,11 @@ void UUIQuestButton::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	Btn_Quest->OnClicked.AddDynamic(this, &UUIQuestButton::OnQuestBtn_Down);
+	if (Btn_Quest)
+	{
+		Btn_Quest->OnClicked.RemoveAll(this);
+		Btn_Quest->OnClicked.AddDynamic(this, &UUIQuestButton::OnQuestBtn_Down);
+	}
 }
 
 

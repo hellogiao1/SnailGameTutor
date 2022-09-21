@@ -34,6 +34,10 @@ public:
 	/** 任务追踪界面*/
 	void ShowOnProgressQuest(int32 ID = -1);
 	void CloseProgressQuest();
+
+	///** 显示交互对象的名字 */
+	//void ShowInteracName(AActor* Target);
+	//void CloseInteracName();
 	
 public:
 	void Push(UUserWidget* Widget = nullptr, bool Hidden = true, bool Throw = false);
@@ -64,15 +68,26 @@ private:
 	UPROPERTY(EditAnywhere, Category = "UIClass", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class UUIOnProgressTipBar> BPProgressClass;
 
+	/*UPROPERTY(EditAnywhere, Category = "UIClass", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class UUIAcceptQuest> BPAcceptQuestClass;*/
+
+	UPROPERTY()
 	class UUIPlayerInfoView* PlayerInfoView;
 
+	UPROPERTY()
 	class UUIPlayerProperty* UIStatusBar;
 
+	UPROPERTY()
 	class UUI_HUD* UIHUD;
 
+	UPROPERTY()
 	class AMyTutorTestCharacter* TutorChar;
 
+	UPROPERTY()
 	class UQuestMain* QuestUI;
 
+	UPROPERTY()
 	class UUIOnProgressTipBar* ProgressUI;
+
+	//class UUIAcceptQuest* AcceptUI;
 };

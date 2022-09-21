@@ -108,17 +108,9 @@ void AMyTutorTestCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 2??GetplayerPawn
+	// 服务器端不执行，但是在客户端和模拟端都执行
 	if (!HasAuthority() )
 	{
-
-		//// ??????????UGamePlayerStatic
-		//APawn* Pawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-		//if (Pawn)
-		//{
-		//	FString str = FString::Printf(TEXT("LocalPawn: %s, self Pawn: %s"), *Pawn->GetName(), *GetName());
-		//	UKismetSystemLibrary::PrintString(GetWorld(), str, true, true, FLinearColor::Blue, 5.f);
-		//}
 		if (HeadTipWidgetComp && HeadTipWidgetComp->GetWidget())
 		{
 			UUIHeadTipBar* UIHead = Cast<UUIHeadTipBar>(HeadTipWidgetComp->GetWidget());
@@ -127,6 +119,13 @@ void AMyTutorTestCharacter::BeginPlay()
 				UIHead->SetHeadTipforName(FText::FromName(CharacterName));
 				UIHead->SetHeadTipforBloodPerctg(HP / MaxHP);
 			}
+		}
+
+
+		//可以判断是模拟端还是客户端
+		if (this == UGameplayStatics::GetPlayerPawn(GetWorld(), 0) || GetLocalRole() == ROLE_AutonomousProxy)
+		{
+			GetWorld()->GetTimerManager().SetTimer(TraceTimerHandle, this, &AMyTutorTestCharacter::LineTraceInteraction, 0.2f, true);
 		}
 	}
 }
@@ -138,7 +137,7 @@ void AMyTutorTestCharacter::LineTraceInteraction()
 
 	FHitResult OutHit;
 	UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLocation, EndLocation, ETraceTypeQuery::TraceTypeQuery4, false, {this}, EDrawDebugTrace::None, OutHit, true);
-
+	
 	if (OutHit.bBlockingHit)
 	{
 		if (OutHit.GetActor() != HitActor)
@@ -170,7 +169,7 @@ void AMyTutorTestCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	LineTraceInteraction();
+	//LineTraceInteraction();
 }
 
 void AMyTutorTestCharacter::OnCharacterDamage_Implementation(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)

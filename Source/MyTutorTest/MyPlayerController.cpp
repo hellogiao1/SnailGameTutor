@@ -9,6 +9,7 @@
 #include "UI/UIPlayerInfoView.h"
 #include "UI/Quest/QuestMain.h"
 #include "UI/Quest/UIOnProgressTipBar.h"
+#include "UI/Quest/Child/UIAcceptQuest.h"
 
 void AMyPlayerController::BeginPlay()
 {
@@ -140,6 +141,27 @@ void AMyPlayerController::CloseProgressQuest()
 		UIHUD->CloseProgressView();
 	}
 }
+
+//void AMyPlayerController::ShowInteracName(AActor* Target)
+//{
+//	if (BPAcceptQuestClass)
+//	{
+//		AcceptUI = CreateWidget<UUIAcceptQuest>(GetWorld(), BPAcceptQuestClass);
+//		if (AcceptUI)
+//		{
+//			AcceptUI->AddToViewport();
+//
+//		}
+//	}
+//}
+//
+//void AMyPlayerController::CloseInteracName()
+//{
+//	if (AcceptUI)
+//	{
+//		AcceptUI->RemoveFromParent();
+//	}
+//}
 
 void AMyPlayerController::Push(UUserWidget* Widget, bool Hidden, bool Throw)
 {
