@@ -29,3 +29,6 @@ ue4服务器
 三种状态：客户端、模拟端、服务端
 
 创建的UE4变量指针都需要加上UPROPERY宏，让系统管理，否则会被系统清理掉！！！
+
+DoesContainerMatchTagQuery()
+https://zhuanlan.zhihu.com/p/472109168

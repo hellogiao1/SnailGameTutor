@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Data/QuestData.h"
 #include "Player/MyCharacterBase.h"
+#include "AbilitySystemInterface.h"
 #include "MyTutorTestCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDamageSignature, float);
@@ -16,7 +17,7 @@ class UUIPlayerProperty;
 class UUI_HUD;
 
 UCLASS(config=Game)
-class AMyTutorTestCharacter : public AMyCharacterBase
+class AMyTutorTestCharacter : public AMyCharacterBase, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -35,6 +36,17 @@ class AMyTutorTestCharacter : public AMyCharacterBase
 	/** ??????? */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest", meta = (AllowPrivateAccess = "true"))
 	class UQuestComponent* QuestComp;
+
+	/** 添加Ability组件 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest", meta = (AllowPrivateAccess = "true"))
+	class UAbilitySystemComponent* AbilitySystem;
+
+public:
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	TArray<TSubclassOf<class UGameplayAbility>> MyAbilities;
+
 public:
 	AMyTutorTestCharacter();
 

@@ -17,6 +17,13 @@
 #include "Components/QuestComponent.h"
 #include "MyPlayerController.h"
 #include "Player/QuestNPC.h"
+#include "../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/GameplayAbilitySpec.h"
+#include "../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemComponent.h"
+
+UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystem;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // AMyTutorTestCharacter
@@ -73,6 +80,8 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 
 	HitActor = nullptr;
 
+
+	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -102,6 +111,8 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMyTutorTestCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AMyTutorTestCharacter::TouchStopped);
+
+	//AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds(""))
 }
 
 void AMyTutorTestCharacter::BeginPlay()
@@ -128,6 +139,19 @@ void AMyTutorTestCharacter::BeginPlay()
 			GetWorld()->GetTimerManager().SetTimer(TraceTimerHandle, this, &AMyTutorTestCharacter::LineTraceInteraction, 0.2f, true);
 		}
 	}
+
+	if (AbilitySystem == nullptr) return;
+
+	if (HasAuthority() && MyAbilities.Num())
+	{
+		for (auto i = 0; i < MyAbilities.Num(); ++i)
+		{
+			if (MyAbilities[i] == nullptr) continue;
+
+			AbilitySystem->GiveAbility(FGameplayAbilitySpec(MyAbilities[i].GetDefaultObject(), 1, 0));
+		}
+	}
+	AbilitySystem->InitAbilityActorInfo(this, this);
 }
 
 void AMyTutorTestCharacter::LineTraceInteraction()
