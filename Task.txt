@@ -32,3 +32,13 @@ ue4服务器
 
 DoesContainerMatchTagQuery()
 https://zhuanlan.zhihu.com/p/472109168
+
+
+复习：
+RPC网络，官方文档阅读；
+游戏编程模式复习
+
+override：参数类型，返回值、const修饰符都需要相同，会进行检查
+报错：cannot convert 'this' pointer from 'const UAS01' to 'UAS01 &'；这是因为函数被声明了为const的，
+C++在调用类成员函数时会隐式的传递this指针，而将函数声明为const即相当于this指针被声明为const的，而这个被声明为const的this指针在print函数中调用getStr()时又会被传入，
+这里问题就出现了，getStr()函数并没有被声明为const的，那么这里面进行参数传递的时候就会发生类型不匹配的问题，也就是这里报的错误。

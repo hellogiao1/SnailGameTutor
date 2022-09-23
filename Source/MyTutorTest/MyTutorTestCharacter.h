@@ -47,6 +47,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	TArray<TSubclassOf<class UGameplayAbility>> MyAbilities;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeSets")
+	TArray<TSubclassOf<class UAttributeSet>> AttributeSets;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UDataTable* AttrDataTable;
+	
+
 public:
 	AMyTutorTestCharacter();
 
@@ -183,5 +190,6 @@ private:
 	TArray<AActor*> Inventory;
 
 	FTimerHandle TraceTimerHandle;
+	
 };
 

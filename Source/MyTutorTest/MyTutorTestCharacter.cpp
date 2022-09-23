@@ -9,6 +9,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "UI/UI_PlayerProperty.h"
 #include "UI/UI_HUD.h"
+#include "Interface/Interaction.h"
 #include "Components/WidgetComponent.h"
 #include "UI/UIHeadTipBar.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -152,6 +153,11 @@ void AMyTutorTestCharacter::BeginPlay()
 		}
 	}
 	AbilitySystem->InitAbilityActorInfo(this, this);
+
+	for (TSubclassOf<UAttributeSet>& Set : AttributeSets)
+	{
+		AbilitySystem->InitStats(Set, AttrDataTable);
+	}
 }
 
 void AMyTutorTestCharacter::LineTraceInteraction()
@@ -166,23 +172,25 @@ void AMyTutorTestCharacter::LineTraceInteraction()
 	{
 		if (OutHit.GetActor() != HitActor)
 		{
-			if (AQuestNPC* NPC = Cast<AQuestNPC>(HitActor))
+			// 观察者模式，我不需要具体知道是哪个观察者被调用，只要它实现了这个接口就行
+
+			if (IInteraction* Observer = Cast<IInteraction>(HitActor))
 			{
-				NPC->EndInteraction(this);
+				Observer->EndInteraction(this);
 			}
 
 			HitActor = OutHit.GetActor();
-			if (AQuestNPC* NPC = Cast<AQuestNPC>(HitActor))
+			if (IInteraction* Observer = Cast<IInteraction>(HitActor))
 			{
-				NPC->InitInteraction(this);
+				Observer->InitInteraction(this);
 			}
 		}
 	}
 	else
 	{
-		if (AQuestNPC* NPC = Cast<AQuestNPC>(HitActor))
+		if (IInteraction* Observer = Cast<IInteraction>(HitActor))
 		{
-			NPC->EndInteraction(this);
+			Observer->EndInteraction(this);
 		}
 		HitActor = nullptr;
 	}
