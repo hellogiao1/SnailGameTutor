@@ -37,25 +37,32 @@ class AMyTutorTestCharacter : public AMyCharacterBase, public IAbilitySystemInte
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest", meta = (AllowPrivateAccess = "true"))
 	class UQuestComponent* QuestComp;
 
+#pragma region GAS
+private:
 	/** 添加Ability组件 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest", meta = (AllowPrivateAccess = "true"))
-	class UAbilitySystemComponent* AbilitySystem;
+		class UAbilitySystemComponent* AbilitySystem;
 
 public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
-	TArray<TSubclassOf<class UGameplayAbility>> MyAbilities;
+		TArray<TSubclassOf<class UGameplayAbility>> MyAbilities;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttributeSets")
-	TArray<TSubclassOf<class UAttributeSet>> AttributeSets;
+		TArray<TSubclassOf<class UAttributeSet>> AttributeSets;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
-	UDataTable* AttrDataTable;
-	
+		UDataTable* AttrDataTable;
+#pragma endregion
 
 public:
 	AMyTutorTestCharacter();
+
+	// 设置右边武器是否开启检测事件
+	void SetRWeaponGeneOverlap(bool bInGeneraOverlap);
+
+public:
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
@@ -63,6 +70,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "DeBug")
 	float TraceDistance = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State|Fight")
+	bool bFightState = false;
 
 protected:
 
@@ -89,6 +99,8 @@ protected:
 
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
+
+	void AcceleRun();
 
 protected:
 	// APawn interface
@@ -164,6 +176,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "QuestFlush")
 	void NotifyQuestReachPos(FVector TargetPosition, bool bReach);
 
+	/** Fight */
+	UFUNCTION(BlueprintCallable, Category = "Fight")
+	void SwitchState();
+
+	void NormalAttack();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Attack")
+	UAnimMontage* NormalAttackMontage;
+
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true", ClampMax = 100.f, ClampMin = 0.f), ReplicatedUsing = OnRep_UpdateUI)
@@ -181,7 +202,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class UUserWidget> UIDiedClass;
 
-	//?????????????NPC??????????????NPC????????????????NPC????????????
 	AMyCharacterBase* InteraCharacter;
 
 	AActor* HitActor;

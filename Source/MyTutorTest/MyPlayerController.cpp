@@ -106,7 +106,7 @@ void AMyPlayerController::CloseQuestMain()
 
 void AMyPlayerController::SwitchQuestMain(AActor* Char, EActivateQuest NewWay)
 {
-	if (UIStack.Top() == QuestUI)
+	if (UIStack.Num() && UIStack.Top() == QuestUI)
 	{
 		Pop();
 	}

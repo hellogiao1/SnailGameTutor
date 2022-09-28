@@ -20,6 +20,7 @@
 #include "Player/QuestNPC.h"
 #include "../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/GameplayAbilitySpec.h"
 #include "../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemComponent.h"
+#include "Equipment/EquipObject.h"
 
 UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
 {
@@ -81,8 +82,19 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 
 	HitActor = nullptr;
 
-
 	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
+
+}
+
+void AMyTutorTestCharacter::SetRWeaponGeneOverlap(bool bInGeneraOverlap)
+{
+	if (RightWeaponComp == nullptr)
+		return;
+
+	if (AEquipObject* Equip = Cast<AEquipObject>(RightWeaponComp->GetChildActor()))
+	{
+		Equip->SetGenerateOverlap(bInGeneraOverlap);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -97,6 +109,9 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 	PlayerInputComponent->BindAction("OpenQuest", IE_Pressed, this, &AMyTutorTestCharacter::OpenQuestUI);
 	PlayerInputComponent->BindAction("Interaction", IE_Pressed, this, &AMyTutorTestCharacter::OnInteractiveInput);
+	PlayerInputComponent->BindAction("SwitchFightState", IE_Pressed, this, &AMyTutorTestCharacter::SwitchState);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyTutorTestCharacter::NormalAttack);
+	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AMyTutorTestCharacter::AcceleRun);
 
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &AMyTutorTestCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &AMyTutorTestCharacter::MoveRight);
@@ -119,7 +134,7 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 void AMyTutorTestCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	// 服务器端不执行，但是在客户端和模拟端都执行
 	if (!HasAuthority() )
 	{
@@ -360,6 +375,26 @@ void AMyTutorTestCharacter::NotifyQuestReachPos(FVector TargetPosition, bool bRe
 	}
 }
 
+void AMyTutorTestCharacter::SwitchState()
+{
+	RightWeaponComp->SetHiddenInGame(bFightState);
+	LeftWeaponComp->SetHiddenInGame(bFightState);
+
+	bFightState = !bFightState;
+}
+
+void AMyTutorTestCharacter::NormalAttack()
+{
+	if (bFightState)
+	{
+		UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+		if (AnimInstance && NormalAttackMontage && !AnimInstance->Montage_IsPlaying(NormalAttackMontage))
+		{
+			AnimInstance->Montage_Play(NormalAttackMontage);
+		}
+	}
+}
+
 void AMyTutorTestCharacter::Died_Implementation()
 {
 	if (UIDiedClass != nullptr)
@@ -417,6 +452,11 @@ void AMyTutorTestCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector 
 void AMyTutorTestCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
 	StopJumping();
+}
+
+void AMyTutorTestCharacter::AcceleRun()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 }
 
 void AMyTutorTestCharacter::TurnAtRate(float Rate)

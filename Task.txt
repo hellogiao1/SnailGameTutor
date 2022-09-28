@@ -42,3 +42,17 @@ override：参数类型，返回值、const修饰符都需要相同，会进行�
 报错：cannot convert 'this' pointer from 'const UAS01' to 'UAS01 &'；这是因为函数被声明了为const的，
 C++在调用类成员函数时会隐式的传递this指针，而将函数声明为const即相当于this指针被声明为const的，而这个被声明为const的this指针在print函数中调用getStr()时又会被传入，
 这里问题就出现了，getStr()函数并没有被声明为const的，那么这里面进行参数传递的时候就会发生类型不匹配的问题，也就是这里报的错误。
+
+c++变量后面加上“：1”位限定符，为什么要这样做呢，通过查询百度得知而且不能取地址
+
+unreal 动画系统学习：
+1、controlrig，重定向、
+
+2022/9/26 11:00
+1、延伸任务系统（击杀NPC、拾取物品、走到指定地点）
+击杀NPC：角色攻击、添加伤害通知、减少血量至死亡，通知任务系统更新
+
+问题：角色身上的capsule为什么会自动适应骨骼大小，我通过查代码CapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
+
+
+动画通知、武器绑定
