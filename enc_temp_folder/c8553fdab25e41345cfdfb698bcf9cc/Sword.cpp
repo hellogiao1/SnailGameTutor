@@ -3,7 +3,6 @@
 
 #include "Sword.h"
 #include "Components/CapsuleComponent.h"
-#include "../Enemy/EnemyBase.h"
 
 ASword::ASword()
 {
@@ -17,8 +16,5 @@ ASword::ASword()
 void ASword::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (AEnemyBase* Enemy = Cast<AEnemyBase>(OtherActor))
-	{
-		Enemy->
-	}
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("Hit Actor"));
 }

@@ -77,7 +77,7 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 	HeadTipWidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
 	HeadTipWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
 
-	//????????????
+	// Create a QuestComponent
 	QuestComp = CreateDefaultSubobject<UQuestComponent>(TEXT("QuestComp"));
 
 	HitActor = nullptr;

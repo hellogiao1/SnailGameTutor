@@ -13,6 +13,7 @@ class AMyTutorTestGameMode : public AGameModeBase
 
 public:
 	AMyTutorTestGameMode();
+
 };
 
 
