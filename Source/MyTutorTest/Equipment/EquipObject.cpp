@@ -25,6 +25,9 @@ AEquipObject::AEquipObject()
 	Capsule->SetGenerateOverlapEvents(false);
 	Capsule->OnComponentBeginOverlap.AddDynamic(this, &AEquipObject::OnHitActor);
 
+	Attack = 0.f;
+
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned

@@ -17,9 +17,7 @@ class MYTUTORTEST_API AEnemyBase : public AMyCharacterBase
 public:
 	AEnemyBase();
 
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server)
 	void ApplyDamage(float NewDamge);
 
 	UFUNCTION()
@@ -28,11 +26,13 @@ public:
 	UFUNCTION()
 	void OnRep_MaxHP();
 
+	
+
 public:
-	UPROPERTY(ReplicatedUsing = "OnRep_CurrHP", EditAnywhere, BlueprintReadWrite, Category = "Property")
+	UPROPERTY(ReplicatedUsing = OnRep_CurrHP, EditAnywhere, BlueprintReadWrite, Category = "Property")
 	float CurrHP;
 
-	UPROPERTY(ReplicatedUsing = "OnRep_MaxHP", EditAnywhere, BlueprintReadWrite, Category = "Property")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxHP, EditAnywhere, BlueprintReadWrite, Category = "Property")
 	float MaxHP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -40,6 +40,11 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+
+private:
+	UFUNCTION(Client, Reliable)
+	void DiedPhysicsEffect();
 
 private:
 	UPROPERTY()

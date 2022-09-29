@@ -24,6 +24,9 @@ AMyCharacterBase::AMyCharacterBase()
 
 	LeftWeaponComp->SetRelativeLocation(FVector(15.611130, 1.656690, -1.495595));
 	LeftWeaponComp->SetRelativeRotation(FRotator(1.059581, -13.419556, 89.936722));
+
+	RightWeaponComp->SetHiddenInGame(true);
+	LeftWeaponComp->SetHiddenInGame(true);
 }
 
 // Called when the game starts or when spawned

@@ -19,6 +19,6 @@ void UUIAttack::OnAttackBtn_Down()
 	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (Tutor)
 	{
-		Tutor->NormalAttack();
+		Tutor->Attack(EAttackType::Normal);
 	}
 }

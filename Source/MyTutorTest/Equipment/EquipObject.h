@@ -28,6 +28,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class USceneComponent* Scene;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DamageProperty")
+	float Attack;
+
 protected:
 	virtual void BeginPlay() override;
 

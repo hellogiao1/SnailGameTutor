@@ -15,7 +15,7 @@ AEnemyBase::AEnemyBase()
 	HeadTipComp->SetupAttachment(RootComponent);
 }
 
-void AEnemyBase::ApplyDamage(float NewDamge)
+void AEnemyBase::ApplyDamage_Implementation(float NewDamge)
 {
 	if (NewDamge == 0)
 		return;

@@ -7,11 +7,7 @@
 
 ASword::ASword()
 {
-	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> SwordMesh(TEXT("StaticMesh'/Game/ModularRPGHeroesPolyart/Meshes/Weapons/Sword06SM.Sword06SM'"));
-	if (SwordMesh.Succeeded())
-	{
-		Weapon->SetStaticMesh(SwordMesh.Object);
-	}*/
+	Attack = 20.f;
 }
 
 void ASword::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
@@ -19,6 +15,6 @@ void ASword::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherA
 {
 	if (AEnemyBase* Enemy = Cast<AEnemyBase>(OtherActor))
 	{
-		Enemy->
+		Enemy->ApplyDamage(Attack);
 	}
 }

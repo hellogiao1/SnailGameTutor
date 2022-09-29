@@ -12,6 +12,12 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FDamageSignature, float);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FModifyPropSignature, float, const FText&);
 DECLARE_DELEGATE(FInterativeSignature);
 
+UENUM()
+enum class EAttackType : uint8
+{
+	Normal,
+
+};
 
 class UUIPlayerProperty;
 class UUI_HUD;
@@ -71,8 +77,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "DeBug")
 	float TraceDistance = 1000.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State|Fight")
+	UPROPERTY(ReplicatedUsing = OnRep_FightState, EditAnywhere, BlueprintReadWrite, Category = "State|Fight")
 	bool bFightState = false;
+
+	UFUNCTION()
+	void OnRep_FightState();
 
 protected:
 
@@ -177,9 +186,13 @@ public:
 	void NotifyQuestReachPos(FVector TargetPosition, bool bReach);
 
 	/** Fight */
-	UFUNCTION(BlueprintCallable, Category = "Fight")
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Fight")
 	void SwitchState();
 
+	UFUNCTION(Server, Reliable)
+	void Attack(EAttackType AttackType);
+
+	UFUNCTION(NetMulticast, Reliable)
 	void NormalAttack();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Attack")
