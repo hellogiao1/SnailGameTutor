@@ -5,6 +5,7 @@
 #include "Components/WidgetComponent.h"
 #include "MyTutorTest/UI/UIHeadTipBar.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 AEnemyBase::AEnemyBase()
 {
@@ -17,14 +18,18 @@ AEnemyBase::AEnemyBase()
 
 void AEnemyBase::ApplyDamage(float NewDamge)
 {
-	if (NewDamge == 0)
+	if (NewDamge == 0 || CurrHP <= 0)
 		return;
 
 	CurrHP -= NewDamge;
 	CurrHP = FMath::Clamp(CurrHP, 0, MaxHP);
+
 	if (CurrHP <= 0)
 	{
 		DiedPhysicsEffect();
+
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AEnemyBase::K2_DestroyActor, 2.f);
 	}
 }
 
@@ -64,15 +69,13 @@ void AEnemyBase::BeginPlay()
 
 void AEnemyBase::DiedPhysicsEffect_Implementation()
 {
-	if (GetMesh() == nullptr)
+	if (GetMesh() == nullptr || HasAuthority())
 		return;
 
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 	GetMesh()->SetAllBodiesPhysicsBlendWeight(1.0f);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 
-	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AEnemyBase::K2_DestroyActor, 1.f);
 }
 
 void AEnemyBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

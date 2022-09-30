@@ -17,7 +17,6 @@ class MYTUTORTEST_API AEnemyBase : public AMyCharacterBase
 public:
 	AEnemyBase();
 
-	UFUNCTION(Server)
 	void ApplyDamage(float NewDamge);
 
 	UFUNCTION()
@@ -43,7 +42,7 @@ protected:
 
 
 private:
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void DiedPhysicsEffect();
 
 private:

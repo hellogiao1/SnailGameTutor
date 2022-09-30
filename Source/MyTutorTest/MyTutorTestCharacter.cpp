@@ -21,6 +21,7 @@
 #include "../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/GameplayAbilitySpec.h"
 #include "../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Equipment/EquipObject.h"
+#include "Enemy/EnemyBase.h"
 
 UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
 {

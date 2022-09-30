@@ -6,6 +6,13 @@
 #include "Animation/AnimNotifies/AnimNotifyState.h"
 #include "AnimNotifyState_DetectHit.generated.h"
 
+UENUM()
+enum class EAttackArea : uint8
+{
+	Sector,
+	Circle,
+};
+
 /**
  * 
  */
@@ -24,4 +31,17 @@ public:
 	// Overridden from UAnimNotifyState to provide custom notify name.
 	FString GetNotifyName_Implementation() const override;
 
+public:
+	UPROPERTY(EditAnywhere)
+	EAttackArea AttackArea = EAttackArea::Circle;
+
+	UPROPERTY(EditAnywhere)
+	float SphereRadius = 200.f;
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "AttackArea == EAttackArea::Sector", EditConditionHides))
+	float Angle = 45.f;
+
+private:
+	UPROPERTY()
+	TArray<AActor*> ActorsToIgnore;
 };
