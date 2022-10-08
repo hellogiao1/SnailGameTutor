@@ -405,7 +405,17 @@ void AMyTutorTestCharacter::NormalAttack_Implementation()
 {
 	if (bFightState)
 	{
-		if (false == bFirstMouseBtnDown)
+		if (CurrPlayAnimMont_Index == -1)
+		{
+			++CurrPlayAnimMont_Index;
+			
+			UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+			if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
+			{
+				AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+			}
+		}
+		else
 		{
 			if (CanCombo && bDoOnce)
 			{
@@ -425,19 +435,6 @@ void AMyTutorTestCharacter::NormalAttack_Implementation()
 				bDoOnce = false;
 				CurrPlayAnimMont_Index = 0;
 			}
-
-			return;
-		}
-		else
-		{
-			CurrPlayAnimMont_Index = 0;
-			bFirstMouseBtnDown = false;
-		}
-
-		UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-		if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
-		{
-			AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
 		}
 	}
 }
@@ -452,10 +449,13 @@ void AMyTutorTestCharacter::OnAttackMontEnd_CallBack_Implementation()
 			AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
 		}
 	}
-
-	bDoOnce = true;
+	else
+	{
+		CurrPlayAnimMont_Index = -1;
+	}
+	
 	CanCombo = true;
-	bFirstMouseBtnDown = true;
+	bDoOnce = true;
 }
 
 void AMyTutorTestCharacter::SetCanCombo_Implementation(bool newCanCombo)

@@ -232,10 +232,9 @@ private:
 	FTimerHandle TraceTimerHandle;
 
 	/** 连招相关变量 */
-	int32 CurrPlayAnimMont_Index;
+	int32 CurrPlayAnimMont_Index = -1;
 	bool CanCombo = true;
 	bool bDoOnce = true;
-	bool bFirstMouseBtnDown = true;
 
 };
 
