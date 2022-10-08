@@ -76,6 +76,8 @@ void AEnemyBase::DiedPhysicsEffect_Implementation()
 	GetMesh()->SetAllBodiesPhysicsBlendWeight(1.0f);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 
+	UKismetSystemLibrary::PrintString(GetWorld());
+
 }
 
 void AEnemyBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

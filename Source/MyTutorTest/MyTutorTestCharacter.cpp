@@ -405,12 +405,62 @@ void AMyTutorTestCharacter::NormalAttack_Implementation()
 {
 	if (bFightState)
 	{
-		UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-		if (AnimInstance && NormalAttackMontage && !AnimInstance->Montage_IsPlaying(NormalAttackMontage))
+		if (false == bFirstMouseBtnDown)
 		{
-			AnimInstance->Montage_Play(NormalAttackMontage);
+			if (CanCombo && bDoOnce)
+			{
+				//可以连招，且第一次执行，则播放下一个动画
+				CanCombo = false;
+				bDoOnce = false;
+
+				++CurrPlayAnimMont_Index;
+				if (CurrPlayAnimMont_Index >= AttackMontages.Num())
+				{
+					CurrPlayAnimMont_Index = 0;
+				}
+			}
+			else if (CanCombo == false && bDoOnce == true)
+			{
+				//不可以连招，且第一次执行，则播放第一个动画
+				bDoOnce = false;
+				CurrPlayAnimMont_Index = 0;
+			}
+
+			return;
+		}
+		else
+		{
+			CurrPlayAnimMont_Index = 0;
+			bFirstMouseBtnDown = false;
+		}
+
+		UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+		if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
+		{
+			AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
 		}
 	}
+}
+
+void AMyTutorTestCharacter::OnAttackMontEnd_CallBack_Implementation()
+{
+	if (bDoOnce == false)
+	{
+		UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+		if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
+		{
+			AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+		}
+	}
+
+	bDoOnce = true;
+	CanCombo = true;
+	bFirstMouseBtnDown = true;
+}
+
+void AMyTutorTestCharacter::SetCanCombo_Implementation(bool newCanCombo)
+{
+	CanCombo = newCanCombo;
 }
 
 void AMyTutorTestCharacter::Died_Implementation()

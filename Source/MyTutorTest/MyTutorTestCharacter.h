@@ -192,11 +192,18 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Attack(EAttackType AttackType);
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(NetMulticast, Unreliable)
 	void NormalAttack();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Attack")
-	UAnimMontage* NormalAttackMontage;
+	TArray<UAnimMontage*> AttackMontages;
+
+	//攻击动画结束后的回调函数：重置初始化属性
+	UFUNCTION(NetMulticast, Unreliable)
+	void OnAttackMontEnd_CallBack();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void SetCanCombo(bool newCanCombo);
 
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP
@@ -223,6 +230,12 @@ private:
 	TArray<AActor*> Inventory;
 
 	FTimerHandle TraceTimerHandle;
-	
+
+	/** 连招相关变量 */
+	int32 CurrPlayAnimMont_Index;
+	bool CanCombo = true;
+	bool bDoOnce = true;
+	bool bFirstMouseBtnDown = true;
+
 };
 
