@@ -6,6 +6,7 @@
 #include "Data/QuestData.h"
 #include "Player/MyCharacterBase.h"
 #include "AbilitySystemInterface.h"
+#include "Animation/AnimInstance.h"
 #include "MyTutorTestCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDamageSignature, float);
@@ -204,6 +205,12 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void SetCanCombo(bool newCanCombo);
+
+	FOnMontageEnded MontageEndedDelegate;
+
+protected:
+	UFUNCTION()
+	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP

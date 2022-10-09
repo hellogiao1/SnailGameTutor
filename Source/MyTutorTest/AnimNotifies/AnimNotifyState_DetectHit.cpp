@@ -14,6 +14,7 @@ void UAnimNotifyState_DetectHit::NotifyBegin(USkeletalMeshComponent* MeshComp, U
  	if (Tutor && Tutor->HasAuthority())
  	{
 		ActorsToIgnore.Reset();
+		ActorsToIgnore.Add(Tutor);
 	}
 }
 
@@ -26,11 +27,7 @@ void UAnimNotifyState_DetectHit::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 	if (Tutor && Tutor->HasAuthority())
 	{
 		TArray<class AActor*> OutActors;
-		UKismetSystemLibrary::SphereOverlapActors(Tutor, Tutor->GetActorLocation(), SphereRadius, { EObjectTypeQuery::ObjectTypeQuery3 }, AEnemyBase::StaticClass(), ActorsToIgnore, OutActors);
-
-		int32 size = ActorsToIgnore.Num();
-
-		int32 log = size + 1;
+		UKismetSystemLibrary::SphereOverlapActors(Tutor, Tutor->GetActorLocation(), SphereRadius, { EObjectTypeQuery::ObjectTypeQuery3 }, nullptr, ActorsToIgnore, OutActors);
 
 		switch (AttackArea)
 		{
@@ -46,6 +43,11 @@ void UAnimNotifyState_DetectHit::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 						Enemy->ApplyDamage(20.f);
 						ActorsToIgnore.Add(Enemy);
 					}
+					else if (AMyTutorTestCharacter* Player = Cast<AMyTutorTestCharacter>(It))
+					{
+						Player->OnCharacterDamage(Player, 20.f, nullptr, Tutor->GetController(), Tutor);
+						ActorsToIgnore.Add(Player);
+					}
 				}
 			}
 		}
@@ -58,6 +60,11 @@ void UAnimNotifyState_DetectHit::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 				{
 					Enemy->ApplyDamage(20.f);
 					ActorsToIgnore.Add(Enemy);
+				}
+				else if (AMyTutorTestCharacter* Player = Cast<AMyTutorTestCharacter>(It))
+				{
+					Player->OnCharacterDamage(Player, 20.f, nullptr, Tutor->GetController(), Tutor);
+					ActorsToIgnore.Add(Player);
 				}
 			}
 		}

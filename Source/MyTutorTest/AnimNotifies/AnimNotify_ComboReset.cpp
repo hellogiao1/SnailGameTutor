@@ -11,9 +11,9 @@ FString UAnimNotify_ComboReset::GetNotifyName_Implementation() const
 
 void UAnimNotify_ComboReset::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
+	/*AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
 	if (Tutor && Tutor->HasAuthority())
 	{
 		Tutor->OnAttackMontEnd_CallBack();
-	}
+	}*/
 }

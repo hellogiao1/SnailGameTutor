@@ -22,6 +22,7 @@
 #include "../Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Equipment/EquipObject.h"
 #include "Enemy/EnemyBase.h"
+#include "Engine/World.h"
 
 UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
 {
@@ -235,6 +236,8 @@ void AMyTutorTestCharacter::OnCharacterDamage_Implementation(AActor* DamagedActo
 	if (HP <= 0.f)
 	{
 		Died();
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AMyTutorTestCharacter::K2_DestroyActor, 2.f, false);
 	}
 
 	//UpdateUI(CharacterName, HP);
@@ -403,7 +406,7 @@ void AMyTutorTestCharacter::Attack_Implementation(EAttackType AttackType)
 
 void AMyTutorTestCharacter::NormalAttack_Implementation()
 {
-	if (bFightState)
+	if (bFightState && AttackMontages.Num())
 	{
 		if (CurrPlayAnimMont_Index == -1)
 		{
@@ -413,10 +416,18 @@ void AMyTutorTestCharacter::NormalAttack_Implementation()
 			if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
 			{
 				AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+
+				MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
+				AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
 			}
 		}
 		else
 		{
+			UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+			if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
+			{
+				return;
+			}
 			if (CanCombo && bDoOnce)
 			{
 				//可以连招，且第一次执行，则播放下一个动画
@@ -447,6 +458,9 @@ void AMyTutorTestCharacter::OnAttackMontEnd_CallBack_Implementation()
 		if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
 		{
 			AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+
+			MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
 		}
 	}
 	else
@@ -461,6 +475,11 @@ void AMyTutorTestCharacter::OnAttackMontEnd_CallBack_Implementation()
 void AMyTutorTestCharacter::SetCanCombo_Implementation(bool newCanCombo)
 {
 	CanCombo = newCanCombo;
+}
+
+void AMyTutorTestCharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	OnAttackMontEnd_CallBack();
 }
 
 void AMyTutorTestCharacter::Died_Implementation()
