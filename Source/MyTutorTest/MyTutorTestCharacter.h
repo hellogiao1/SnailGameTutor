@@ -6,6 +6,7 @@
 #include "Data/QuestData.h"
 #include "Player/MyCharacterBase.h"
 #include "AbilitySystemInterface.h"
+#include "Animation/AnimInstance.h"
 #include "MyTutorTestCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDamageSignature, float);
@@ -205,6 +206,12 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void SetCanCombo(bool newCanCombo);
 
+	FOnMontageEnded MontageEndedDelegate;
+
+protected:
+	UFUNCTION()
+	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true", ClampMax = 100.f, ClampMin = 0.f), ReplicatedUsing = OnRep_UpdateUI)
@@ -232,10 +239,9 @@ private:
 	FTimerHandle TraceTimerHandle;
 
 	/** 连招相关变量 */
-	int32 CurrPlayAnimMont_Index;
+	int32 CurrPlayAnimMont_Index = -1;
 	bool CanCombo = true;
 	bool bDoOnce = true;
-	bool bFirstMouseBtnDown = true;
 
 };
 
