@@ -4,20 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
-#include "AnimNotifyState_DetectHit.generated.h"
-
-UENUM()
-enum class EAttackArea : uint8
-{
-	Sector,
-	Circle,
-};
+#include "AnimNotifyState_DetectCanCombo.generated.h"
 
 /**
  * 
  */
-UCLASS(editinlinenew, Blueprintable, const, hidecategories = Object, collapsecategories, meta = (ShowWorldContextPin, DisplayName = "DetectHit"))
-class MYTUTORTEST_API UAnimNotifyState_DetectHit : public UAnimNotifyState
+UCLASS()
+class MYTUTORTEST_API UAnimNotifyState_DetectCanCombo : public UAnimNotifyState
 {
 	GENERATED_BODY()
 public:
@@ -31,20 +24,5 @@ public:
 	// Overridden from UAnimNotifyState to provide custom notify name.
 	FString GetNotifyName_Implementation() const override;
 
-public:
-	UPROPERTY(EditAnywhere)
-	EAttackArea AttackArea = EAttackArea::Sector;
 
-	UPROPERTY(EditAnywhere)
-	float SphereRadius = 200.f;
-
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "AttackArea == EAttackArea::Sector", EditConditionHides))
-	float Angle = 45.f;
-
-	UPROPERTY(EditAnywhere, Category = "ComboMode")
-	int32 PlayComboMode = -1;
-
-private:
-	UPROPERTY()
-	TArray<AActor*> ActorsToIgnore;
 };

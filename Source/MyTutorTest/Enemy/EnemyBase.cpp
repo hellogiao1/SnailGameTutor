@@ -18,10 +18,15 @@ AEnemyBase::AEnemyBase()
 
 void AEnemyBase::ApplyDamage(float NewDamge)
 {
-	if (NewDamge == 0 || CurrHP <= 0)
-		return;
+	
+}
 
-	CurrHP -= NewDamge;
+float AEnemyBase::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (Damage == 0 || CurrHP <= 0)
+		return 0;
+
+	CurrHP -= Damage;
 	CurrHP = FMath::Clamp(CurrHP, 0, MaxHP);
 
 	if (CurrHP <= 0)
@@ -31,6 +36,8 @@ void AEnemyBase::ApplyDamage(float NewDamge)
 		FTimerHandle TimerHandle;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AEnemyBase::K2_DestroyActor, 2.f);
 	}
+
+	return Damage;
 }
 
 void AEnemyBase::OnRep_CurrHP()

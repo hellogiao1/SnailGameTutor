@@ -71,9 +71,6 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
-	// BindDamageEvent
-	OnTakeAnyDamage.AddDynamic(this, &AMyTutorTestCharacter::OnCharacterDamage);
-
 	HeadTipWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HeadTipWidgetComp"));
 	HeadTipWidgetComp->SetupAttachment(RootComponent);
 	HeadTipWidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
@@ -227,10 +224,10 @@ void AMyTutorTestCharacter::Tick(float DeltaTime)
 	//LineTraceInteraction();
 }
 
-void AMyTutorTestCharacter::OnCharacterDamage_Implementation(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+float AMyTutorTestCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (Damage <= 0.f) return;
-	if (HP <= 0.f) return;
+	if (Damage <= 0.f || HP <= 0.f)
+		return 0;
 
 	HP = (HP - Damage) <= 0.f ? 0.f : (HP - Damage);
 	if (HP <= 0.f)
@@ -239,8 +236,7 @@ void AMyTutorTestCharacter::OnCharacterDamage_Implementation(AActor* DamagedActo
 		FTimerHandle TimerHandle;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AMyTutorTestCharacter::K2_DestroyActor, 2.f, false);
 	}
-
-	//UpdateUI(CharacterName, HP);
+	return Damage;
 }
 
 void AMyTutorTestCharacter::SetCharacterName_Implementation(const FName& NewName)
@@ -404,18 +400,24 @@ void AMyTutorTestCharacter::Attack_Implementation(EAttackType AttackType)
 	}
 }
 
-void AMyTutorTestCharacter::NormalAttack_Implementation()
+void AMyTutorTestCharacter::NormalAttack()
 {
 	if (bFightState && AttackMontages.Num())
 	{
-		if (CurrPlayAnimMont_Index == -1)
+		if (!IsAttacking)
 		{
+			IsAttacking = true;
+			
 			++CurrPlayAnimMont_Index;
+			if (CurrPlayAnimMont_Index >= AttackMontages.Num())
+			{
+				CurrPlayAnimMont_Index = 0;
+			}
 			
 			UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
 			if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
 			{
-				AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+				PlayMontage_Internal(CurrPlayAnimMont_Index);
 
 				MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
 				AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
@@ -423,63 +425,136 @@ void AMyTutorTestCharacter::NormalAttack_Implementation()
 		}
 		else
 		{
-			UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-			if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
+			//当攻击帧结束
+			if (CanCombo)
 			{
-				return;
-			}
-			if (CanCombo && bDoOnce)
-			{
-				//可以连招，且第一次执行，则播放下一个动画
-				CanCombo = false;
-				bDoOnce = false;
-
-				++CurrPlayAnimMont_Index;
-				if (CurrPlayAnimMont_Index >= AttackMontages.Num())
+				switch (PlayAttackMode)
 				{
-					CurrPlayAnimMont_Index = 0;
+				case 1:
+				{
+					CanCombo = false;
+
+					//可以连击的时候，取消计时器
+					GetWorld()->GetTimerManager().ClearTimer(DelayAttackHandle);
+
+					++CurrPlayAnimMont_Index;
+					if (CurrPlayAnimMont_Index >= AttackMontages.Num())
+					{
+						CurrPlayAnimMont_Index = 0;
+					}
+
+					UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+					if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
+					{
+						PlayMontage_Internal(CurrPlayAnimMont_Index);
+
+						MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
+						AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
+					}
+				}
+				break;
+				case 2:
+				{
+					if (bComboClick)
+					{
+						bComboClick = false;
+
+						++CurrPlayAnimMont_Index;
+						if (CurrPlayAnimMont_Index >= AttackMontages.Num())
+						{
+							CurrPlayAnimMont_Index = 0;
+						}
+
+						UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+						if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
+						{
+							PlayMontage_Internal(CurrPlayAnimMont_Index);
+
+							MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
+							AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
+						}
+					}
+				}
+				break;
+				default:
+					break;
 				}
 			}
-			else if (CanCombo == false && bDoOnce == true)
-			{
-				//不可以连招，且第一次执行，则播放第一个动画
-				bDoOnce = false;
-				CurrPlayAnimMont_Index = 0;
-			}
+
+			
 		}
+
+		
 	}
 }
 
-void AMyTutorTestCharacter::OnAttackMontEnd_CallBack_Implementation()
+void AMyTutorTestCharacter::PlayMontage_Internal_Implementation(int32 Index)
 {
-	if (bDoOnce == false)
+	UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
+	if (AnimInstance && AttackMontages.IsValidIndex(Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[Index]))
 	{
-		UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-		if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
-		{
-			AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
-
-			MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
-		}
+		AnimInstance->Montage_Play(AttackMontages[Index]);
 	}
-	else
-	{
-		CurrPlayAnimMont_Index = -1;
-	}
-	
-	CanCombo = true;
-	bDoOnce = true;
 }
 
-void AMyTutorTestCharacter::SetCanCombo_Implementation(bool newCanCombo)
+void AMyTutorTestCharacter::OnAttackMontEnd_CallBack()
+{	
+	CanCombo = false;
+	IsAttacking = false;
+	CurrPlayAnimMont_Index = -1;
+	bComboClick = false;
+	PlayAttackMode = -1;
+}
+
+void AMyTutorTestCharacter::SetCanCombo(bool newCanCombo)
 {
 	CanCombo = newCanCombo;
 }
 
+void AMyTutorTestCharacter::SetbComboClick(bool InComboClick)
+{
+	bComboClick = InComboClick;
+}
+
+void AMyTutorTestCharacter::SetPlayAttackMode(int32 NewPlayMode)
+{
+	PlayAttackMode = NewPlayMode;
+}
+
 void AMyTutorTestCharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	OnAttackMontEnd_CallBack();
+	switch (PlayAttackMode)
+	{
+	case 1:
+	{
+		if (IsAttacking && CanCombo)
+		{
+			//在攻击帧后的时候被打断或者结束动画，延迟1s去重置
+			GetWorld()->GetTimerManager().SetTimer(DelayAttackHandle, this, &AMyTutorTestCharacter::OnAttackMontEnd_CallBack, 1.f, false);
+		}
+		else
+		{
+			//在攻击帧前打断动画的话，直接重置
+			OnAttackMontEnd_CallBack();
+		}
+	}
+	break;
+	case 2:
+	{
+		//如果是在可以连击的情况下，并没有按下连击健，且被打断或者播放完毕，则重置
+		if (IsAttacking && bComboClick)
+		{
+			OnAttackMontEnd_CallBack();
+		}
+	}
+	break;
+	default:
+	{
+		OnAttackMontEnd_CallBack();
+	}
+	break;
+	}
+	
 }
 
 void AMyTutorTestCharacter::Died_Implementation()

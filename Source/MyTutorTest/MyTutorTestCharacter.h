@@ -132,10 +132,7 @@ public:
 	/** Returns QuestComponent **/
 	FORCEINLINE class UQuestComponent* GetQuestComponent() const { return QuestComp; }
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void OnCharacterDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
-	//virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	UFUNCTION(Client, Reliable)
 	void Died();
@@ -193,24 +190,30 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Attack(EAttackType AttackType);
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void NormalAttack();
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Attack")
 	TArray<UAnimMontage*> AttackMontages;
 
-	//攻击动画结束后的回调函数：重置初始化属性
-	UFUNCTION(NetMulticast, Unreliable)
-	void OnAttackMontEnd_CallBack();
-
-	UFUNCTION(NetMulticast, Unreliable)
 	void SetCanCombo(bool newCanCombo);
+
+	FORCEINLINE bool GetbComboClick() { return bComboClick; }
+	void SetbComboClick(bool InComboClick);
+
+	//设置播放的效果
+	void SetPlayAttackMode(int32 NewPlayMode);
 
 	FOnMontageEnded MontageEndedDelegate;
 
 protected:
 	UFUNCTION()
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	//攻击动画结束后的回调函数：重置初始化属性
+	void OnAttackMontEnd_CallBack();
+
+	void NormalAttack();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void PlayMontage_Internal(int32 Index);
 
 private:
 	// TODO: ...ClampMax ???????? ClampMax = MaxHP
@@ -238,10 +241,22 @@ private:
 
 	FTimerHandle TraceTimerHandle;
 
+#pragma region Attack Value
 	/** 连招相关变量 */
 	int32 CurrPlayAnimMont_Index = -1;
-	bool CanCombo = true;
-	bool bDoOnce = true;
+	int32 PlayAttackMode = -1;
+
+	//在攻击帧结束后通知修改为true
+	bool CanCombo = false;
+
+	//第一次攻击的时候设为true
+	bool IsAttacking = false;
+	FTimerHandle DelayAttackHandle;
+
+	//第二种连击效果，在NotifyState中进行动画播放
+	bool bComboClick = false;
+
+#pragma endregion
 
 };
 

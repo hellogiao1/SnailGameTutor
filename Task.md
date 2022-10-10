@@ -1,6 +1,6 @@
 ### 修改
 
-##### 2022/9/15 12:00
+#### 2022/9/15 12:00
 
 1、通过角色去检测NPC进行交互（其他游戏也是通过角色检测，射线还是盒子？）
 （游戏中和物品交互是通过角色碰撞体去检测；和NPC交互是通过摄像机射线检测）
@@ -9,7 +9,7 @@
 4、传入结构体开销问题
 5、设计“任务”结构，实现进度功能
 
-##### 2022/9/20 18:00
+#### 2022/9/20 18:00
 
 1、控件一般都是用完就扔的，不需要用对象池存起来，否则会有很多问题（我自己也感受到了）（Addchild的时候会把UI的construct函数再调用一遍）
 2、调整显示按钮关闭任务界面，以手游的模式开发，和NPC交互通过UI按钮绑定
@@ -17,7 +17,7 @@
 4、修改检测机制，只在自己客户端执行，不在网络上执行
 5、Tick换成Timer
 
-##### 2022/9/26 11:00
+#### 2022/9/26 11:00
 
 1、延伸任务系统（击杀NPC、拾取物品、走到指定地点）
 击杀NPC：角色攻击、添加伤害通知、减少血量至死亡，通知任务系统更新
@@ -26,20 +26,84 @@
 
 <img src="Task.assets/133087336985449552.png" alt="img" style="zoom:50%;" />
 
-##### 2022/10/8 国庆回来
+#### 2022/10/8 国庆回来
+
+##### 第一种连击效果
 
 <img src="Task.assets/133096700416362585.png" alt="img" style="zoom:75%;" />
 
-###### 修改
+###### 给动画蒙太奇添加中断以及结束委托函数通知
 
-1. 给动画蒙太奇添加中断以及结束委托函数通知
+蓝图中的PlayMontage的回调函数，这个函数只能在蓝图中使用，它的接口函数都是私有的；如何在c++中使用呢，首先它对应的是c++的`PlayMontageCallbackProxy.h`文件中的函数，
 
-   <details><summary>思路</summary>
-   学习如何写出蓝图中的PlayMontage的回调函数
+```c++
+// Called to perform the query internally 给蓝图脚本语言查询使用的
+	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true"))
+	static UPlayMontageCallbackProxy* CreateProxyObjectForPlayMontage(...);------------>
 
-2. 修改伤害判定为每个玩家
+//这个函数类部是调用这个函数，只用看里面关键的代码，AnimInstance->Montage_SetBlendingOutDelegate(BlendingOutDelegate, MontageToPlay);
+void PlayMontage(
+		class USkeletalMeshComponent* InSkeletalMeshComponent,
+		class UAnimMontage* MontageToPlay,
+		float PlayRate = 1.f,
+		float StartingPosition = 0.f,
+		FName StartingSection = NAME_None);
+{
+    //先获取到角色的动画实例
+	if (UAnimInstance* AnimInstance = InSkeletalMeshComponent->GetAnimInstance())
+	{
+		//.....
+        
+        //获取到动画实例后，调用函数进行委托绑定，这里的委托变量，可以自己定义一个然后进行绑定
+        BlendingOutDelegate.BindUObject(this, &UPlayMontageCallbackProxy::OnMontageBlendingOut);
+		AnimInstance->Montage_SetBlendingOutDelegate(BlendingOutDelegate, MontageToPlay);
+               
+		MontageEndedDelegate.BindUObject(this, &UPlayMontageCallbackProxy::OnMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, MontageToPlay);
+        
+        //....
+	}
 
----
+}
+```
+
+通过观察源码，发现其中只需要在你需要的地方声明相关的委托变量，并进行绑定你需要回调的函数
+
+**Note：这里需要先进行Play再绑定回调函数**，否则会绑定失败，这是因为`Montage_SetEndDelegate()`函数是去内部查找这个蒙太奇对应的实例进行委托变量赋值，但是这时候没播放，就查询不到这个实例。
+
+```c++
+AnimInstance->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+
+MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
+AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
+
+```
+
+![image-20221010110147730](Task.assets/image-20221010110147730.png)
+
+###### 修改伤害判定为每个玩家
+
+这里可以重写OnTakeDamage函数，每个Actor都有这个函数
+
+
+
+
+
+2022.10.10
+
+![img](Task.assets/133097805461228747.png)
+
+1、把武器相关的动画播放逻辑，封装到相关的武器类，实现通用功能，可以写一个接口函数
+
+2、同一个函数当服务器和客户端执行的时候，可以执行不同的逻辑（官网文档有一个例子，[多人游戏编程快速入门指南 | 虚幻引擎文档 (unrealengine.com)](https://docs.unrealengine.com/4.27/zh-CN/InteractiveExperiences/Networking/QuickStart/)），代码中函数名规范，比如ClientPlayMontage，知道是在客户端执行
+
+3、封装函数
+
+
+
+-----
+
+
 
 
 
@@ -91,3 +155,27 @@ unreal 动画系统学习：
 连招系统：
 按下攻击键，存储当前的状态到队列里面，并排除相同的蒙太奇，避免同一时间重复播放相同的蒙太奇；
 这里排除相同的蒙太奇，可以用列表去判断；
+
+
+
+### 暂时想到的东西
+
+制作躲避动画
+
+切换武器动画
+
+拾取武器，切换武器功能
+
+换装系统，捏脸系统
+
+
+
+### 问题
+
+UE中为什么不能嵌套容器？
+
+![image-20221010154418197](Task.assets/image-20221010154418197.png)
+
+UHT中不让编译过
+
+解决办法：可以使用结构体进行转移

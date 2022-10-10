@@ -38,16 +38,8 @@ void UAnimNotifyState_DetectHit::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 				bool InSightCone = CheckIsTargetInSightCone(Angle, Tutor->GetActorForwardVector(), Tutor->GetActorLocation(), It->GetActorLocation());
 				if (InSightCone)
 				{
-					if (AEnemyBase* Enemy = Cast<AEnemyBase>(It))
-					{
-						Enemy->ApplyDamage(20.f);
-						ActorsToIgnore.Add(Enemy);
-					}
-					else if (AMyTutorTestCharacter* Player = Cast<AMyTutorTestCharacter>(It))
-					{
-						Player->OnCharacterDamage(Player, 20.f, nullptr, Tutor->GetController(), Tutor);
-						ActorsToIgnore.Add(Player);
-					}
+					It->TakeDamage(20.f, FDamageEvent(), Tutor->GetController(), Tutor);
+					ActorsToIgnore.Add(It);
 				}
 			}
 		}
@@ -56,16 +48,8 @@ void UAnimNotifyState_DetectHit::NotifyTick(USkeletalMeshComponent* MeshComp, UA
 		{
 			for (AActor* It : OutActors)
 			{
-				if (AEnemyBase* Enemy = Cast<AEnemyBase>(It))
-				{
-					Enemy->ApplyDamage(20.f);
-					ActorsToIgnore.Add(Enemy);
-				}
-				else if (AMyTutorTestCharacter* Player = Cast<AMyTutorTestCharacter>(It))
-				{
-					Player->OnCharacterDamage(Player, 20.f, nullptr, Tutor->GetController(), Tutor);
-					ActorsToIgnore.Add(Player);
-				}
+				It->TakeDamage(20.f, FDamageEvent(), Tutor->GetController(), Tutor);
+				ActorsToIgnore.Add(It);
 			}
 		}
 		break;
@@ -82,6 +66,12 @@ void UAnimNotifyState_DetectHit::NotifyEnd(USkeletalMeshComponent* MeshComp, UAn
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 
+	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
+	if (Tutor && Tutor->HasAuthority())
+	{
+		Tutor->SetCanCombo(true);
+		Tutor->SetPlayAttackMode(PlayComboMode);
+	}
 }
 
 bool UAnimNotifyState_DetectHit::CheckIsTargetInSightCone(float AngleDegrees, FVector AxisLocation, FVector StartLocation, FVector TargetLocation)

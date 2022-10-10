@@ -27,7 +27,7 @@ AEquipObject::AEquipObject()
 
 	Attack = 0.f;
 
-	bReplicates = true;
+	//bReplicates = true;
 }
 
 // Called when the game starts or when spawned
