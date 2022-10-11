@@ -114,7 +114,7 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 	PlayerInputComponent->BindAction("OpenQuest", IE_Pressed, this, &AMyTutorTestCharacter::OpenQuestUI);
 	PlayerInputComponent->BindAction("Interaction", IE_Pressed, this, &AMyTutorTestCharacter::OnInteractiveInput);
-	PlayerInputComponent->BindAction("SwitchFightState", IE_Pressed, this, &AMyTutorTestCharacter::SwitchState);
+	PlayerInputComponent->BindAction("SwitchFightState", IE_Pressed, this, &AMyTutorTestCharacter::Server_SwitchState);
 	//PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyTutorTestCharacter::NormalAttack);
 	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AMyTutorTestCharacter::AcceleRun);
 
@@ -356,12 +356,12 @@ void AMyTutorTestCharacter::NotifyQuestReachPos(FVector TargetPosition, bool bRe
 	}
 }
 
-void AMyTutorTestCharacter::SwitchState_Implementation()
+void AMyTutorTestCharacter::Server_SwitchState_Implementation()
 {
 	bFightState = !bFightState;
 }
 
-void AMyTutorTestCharacter::Attack_Implementation(EAttackType AttackType)
+void AMyTutorTestCharacter::Server_AttackNotify_Implementation(EAttackType AttackType)
 {
 	switch (AttackType)
 	{
@@ -375,161 +375,27 @@ void AMyTutorTestCharacter::Attack_Implementation(EAttackType AttackType)
 	}
 }
 
+bool AMyTutorTestCharacter::SetRWeaponFinishFrame(bool bFishFrame)
+{
+	AEquipObject* EquipObject = RightWeaponComp ? Cast<AEquipObject>(RightWeaponComp->GetChildActor()) : nullptr;
+	if (EquipObject)
+	{
+		EquipObject->SetbHitFrameFinish(bFishFrame);
+		return true;
+	}
+	return false;
+}
+
 void AMyTutorTestCharacter::NormalAttack()
 {
-	if (bFightState && AttackMontages.Num())
+	if (bFightState)
 	{
-		if (!IsAttacking)
+		AEquipObject* EquipObject = RightWeaponComp ? Cast<AEquipObject>(RightWeaponComp->GetChildActor()) : nullptr;
+		if (EquipObject)
 		{
-			IsAttacking = true;
-			
-			++CurrPlayAnimMont_Index;
-			if (CurrPlayAnimMont_Index >= AttackMontages.Num())
-			{
-				CurrPlayAnimMont_Index = 0;
-			}
-			
-			UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-			if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
-			{
-				PlayMontage_Internal(CurrPlayAnimMont_Index);
-
-				MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
-				AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
-			}
-		}
-		else
-		{
-			//当攻击帧结束
-			if (CanCombo)
-			{
-				switch (PlayAttackMode)
-				{
-				case 1:
-				{
-					CanCombo = false;
-
-					//可以连击的时候，取消计时器
-					GetWorld()->GetTimerManager().ClearTimer(DelayAttackHandle);
-
-					++CurrPlayAnimMont_Index;
-					if (CurrPlayAnimMont_Index >= AttackMontages.Num())
-					{
-						CurrPlayAnimMont_Index = 0;
-					}
-
-					UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-					if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
-					{
-						PlayMontage_Internal(CurrPlayAnimMont_Index);
-
-						MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
-						AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
-					}
-				}
-				break;
-				case 2:
-				{
-					if (bComboClick)
-					{
-						bComboClick = false;
-
-						++CurrPlayAnimMont_Index;
-						if (CurrPlayAnimMont_Index >= AttackMontages.Num())
-						{
-							CurrPlayAnimMont_Index = 0;
-						}
-
-						UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-						if (AnimInstance && AttackMontages.IsValidIndex(CurrPlayAnimMont_Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[CurrPlayAnimMont_Index]))
-						{
-							PlayMontage_Internal(CurrPlayAnimMont_Index);
-
-							MontageEndedDelegate.BindUObject(this, &AMyTutorTestCharacter::OnMontageEnded);
-							AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPlayAnimMont_Index]);
-						}
-					}
-				}
-				break;
-				default:
-					break;
-				}
-			}
-
-			
-		}
-
-		
-	}
-}
-
-void AMyTutorTestCharacter::PlayMontage_Internal_Implementation(int32 Index)
-{
-	UAnimInstance* AnimInstance = (GetMesh()) ? GetMesh()->GetAnimInstance() : nullptr;
-	if (AnimInstance && AttackMontages.IsValidIndex(Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[Index]))
-	{
-		AnimInstance->Montage_Play(AttackMontages[Index]);
-	}
-}
-
-void AMyTutorTestCharacter::OnAttackMontEnd_CallBack()
-{	
-	CanCombo = false;
-	IsAttacking = false;
-	CurrPlayAnimMont_Index = -1;
-	bComboClick = false;
-	PlayAttackMode = -1;
-}
-
-void AMyTutorTestCharacter::SetCanCombo(bool newCanCombo)
-{
-	CanCombo = newCanCombo;
-}
-
-void AMyTutorTestCharacter::SetbComboClick(bool InComboClick)
-{
-	bComboClick = InComboClick;
-}
-
-void AMyTutorTestCharacter::SetPlayAttackMode(int32 NewPlayMode)
-{
-	PlayAttackMode = NewPlayMode;
-}
-
-void AMyTutorTestCharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	switch (PlayAttackMode)
-	{
-	case 1:
-	{
-		if (IsAttacking && CanCombo)
-		{
-			//在攻击帧后的时候被打断或者结束动画，延迟1s去重置
-			GetWorld()->GetTimerManager().SetTimer(DelayAttackHandle, this, &AMyTutorTestCharacter::OnAttackMontEnd_CallBack, 1.f, false);
-		}
-		else
-		{
-			//在攻击帧前打断动画的话，直接重置
-			OnAttackMontEnd_CallBack();
+			EquipObject->Excute_NormalAttack();
 		}
 	}
-	break;
-	case 2:
-	{
-		//如果是在可以连击的情况下，并没有按下连击健，且被打断或者播放完毕，则重置
-		if (IsAttacking && bComboClick)
-		{
-			OnAttackMontEnd_CallBack();
-		}
-	}
-	break;
-	default:
-	{
-		OnAttackMontEnd_CallBack();
-	}
-	break;
-	}
-	
 }
 
 void AMyTutorTestCharacter::Died()

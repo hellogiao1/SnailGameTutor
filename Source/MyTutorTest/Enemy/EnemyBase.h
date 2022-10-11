@@ -27,7 +27,7 @@ protected:
 	/** 每当有Actor被摧毁时，就会调用 Destroyed 函数。粒子发射器自身通常不复制，但由于Actor摧毁会复制，
 	我们知道若在服务器上摧毁此投射物，则各个连接客户端在摧毁各自的投射物副本时将调用此函数。
 	结果，所有玩家都会看到投射物被摧毁时的爆炸效果。 */
-	virtual void Destroyed() override;
+	//virtual void Destroyed() override;
 
 	virtual void OnCharcterDied();
 

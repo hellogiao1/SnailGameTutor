@@ -7,7 +7,7 @@
 
 ASword::ASword()
 {
-	Attack = 20.f;
+	AttackValue = 20.f;
 }
 
 void ASword::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
@@ -16,5 +16,25 @@ void ASword::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherA
 	if (AEnemyBase* Enemy = Cast<AEnemyBase>(OtherActor))
 	{
 		
+	}
+}
+
+void ASword::NormalCombo()
+{
+	//可以连击的时候，取消计时器
+	GetWorld()->GetTimerManager().ClearTimer(DelayAttackHandle);
+}
+
+void ASword::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (IsAttacking && CanCombo)
+	{
+		//在攻击帧后的时候被打断或者结束动画，延迟1s去重置
+		GetWorld()->GetTimerManager().SetTimer(DelayAttackHandle, this, &ASword::ResetAttackMontValue, 1.f, false);
+	}
+	else
+	{
+		//在攻击帧前打断动画的话，直接重置
+		ResetAttackMontValue();
 	}
 }

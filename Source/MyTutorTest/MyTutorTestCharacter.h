@@ -174,35 +174,15 @@ public:
 
 	/** Fight */
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Fight")
-	void SwitchState();
+	void Server_SwitchState();
 
+	/** 通知服务器执行普通攻击 */
 	UFUNCTION(Server, Reliable)
-	void Attack(EAttackType AttackType);
+	void Server_AttackNotify(EAttackType AttackType);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Attack")
-	TArray<UAnimMontage*> AttackMontages;
+	/** 通知修改攻击帧是否结束 */
+	bool SetRWeaponFinishFrame(bool bFishFrame);
 
-	void SetCanCombo(bool newCanCombo);
-
-	FORCEINLINE bool GetbComboClick() { return bComboClick; }
-	void SetbComboClick(bool InComboClick);
-
-	//设置播放的效果
-	void SetPlayAttackMode(int32 NewPlayMode);
-
-	FOnMontageEnded MontageEndedDelegate;
-
-protected:
-	UFUNCTION()
-	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-
-	//攻击动画结束后的回调函数：重置初始化属性
-	void OnAttackMontEnd_CallBack();
-
-	void NormalAttack();
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void PlayMontage_Internal(int32 Index);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true"), ReplicatedUsing = OnRep_CurrentHealth)
@@ -222,23 +202,6 @@ private:
 	TArray<AActor*> Inventory;
 
 	FTimerHandle TraceTimerHandle;
-
-#pragma region Attack Value
-	/** 连招相关变量 */
-	int32 CurrPlayAnimMont_Index = -1;
-	int32 PlayAttackMode = -1;
-
-	//在攻击帧结束后通知修改为true
-	bool CanCombo = false;
-
-	//第一次攻击的时候设为true
-	bool IsAttacking = false;
-	FTimerHandle DelayAttackHandle;
-
-	//第二种连击效果，在NotifyState中进行动画播放
-	bool bComboClick = false;
-
-#pragma endregion
 
 };
 

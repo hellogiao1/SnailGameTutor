@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
+#include "../Player/MyCharacterBase.h"
 
 // Sets default values
 AEquipObject::AEquipObject()
@@ -25,9 +26,10 @@ AEquipObject::AEquipObject()
 	Capsule->SetGenerateOverlapEvents(false);
 	Capsule->OnComponentBeginOverlap.AddDynamic(this, &AEquipObject::OnHitActor);
 
-	Attack = 0.f;
-
-	//bReplicates = true;
+	AttackValue = 0.f;
+	IsAttacking = false;
+	CanCombo = false;
+	bHitFrameFinish = false;
 }
 
 // Called when the game starts or when spawned
@@ -35,11 +37,41 @@ void AEquipObject::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
 }
 
 void AEquipObject::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
+}
+
+void AEquipObject::PlayMontage_Internal(int32 Index)
+{
+	AMyCharacterBase* CharBase = Cast<AMyCharacterBase>(GetOwner());
+	if (CharBase && CharBase->GetMesh())
+	{
+		UAnimInstance* AnimInstance = CharBase->GetMesh()->GetAnimInstance();
+		if (AnimInstance && AttackMontages.IsValidIndex(Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[Index]))
+		{
+			NetMult_PlayMontage(AnimInstance);
+
+			MontageEndedDelegate.BindUObject(this, &AEquipObject::OnMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[Index]);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Play Attack Montage Failed"));
+	}
+	
+}
+
+void AEquipObject::NetMult_PlayMontage_Implementation(UAnimInstance* AnimInst)
+{
+	if (AnimInst)
+	{
+		AnimInst->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+	}
 }
 
 // Called every frame
@@ -55,5 +87,67 @@ void AEquipObject::SetGenerateOverlap(bool bInGeneOverlap)
 	{
 		Capsule->SetGenerateOverlapEvents(bInGeneOverlap);
 	}
+}
+
+void AEquipObject::SetCanCombo(bool canCombo)
+{
+	CanCombo = canCombo;
+}
+
+void AEquipObject::SetbHitFrameFinish(bool NewValue)
+{
+	bHitFrameFinish = NewValue;
+}
+
+void AEquipObject::Excute_NormalAttack()
+{
+	if (bHitFrameFinish == false)
+	{
+		return;
+	}
+
+	if (!IsAttacking)
+	{
+		IsAttacking = true;
+
+		CurrPlayAnimMont_Index = 0;
+
+		PlayMontage_Internal(CurrPlayAnimMont_Index);
+	}
+	else
+	{
+		//当攻击帧结束，且可以连击的时候
+		if (CanCombo)
+		{
+			CanCombo = false;
+
+
+			++CurrPlayAnimMont_Index;
+			if (CurrPlayAnimMont_Index >= AttackMontages.Num())
+			{
+				CurrPlayAnimMont_Index = 0;
+			}
+
+			NormalCombo();
+
+			PlayMontage_Internal(CurrPlayAnimMont_Index);
+
+		}
+
+
+	}
+}
+
+void AEquipObject::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	ResetAttackMontValue();
+}
+
+void AEquipObject::ResetAttackMontValue()
+{
+	CanCombo = false;
+	IsAttacking = false;
+	CurrPlayAnimMont_Index = 0;
+	bHitFrameFinish = false;
 }
 

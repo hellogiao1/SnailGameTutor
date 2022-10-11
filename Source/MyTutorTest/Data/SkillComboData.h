@@ -13,6 +13,8 @@ struct FMontageArray : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UAnimMontage*> AttackMonts;
+
+	int32 CurrPlayAnimMont_Index = -1;
 };
 
 /**

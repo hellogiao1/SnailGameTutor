@@ -69,8 +69,7 @@ void UAnimNotifyState_DetectHit::NotifyEnd(USkeletalMeshComponent* MeshComp, UAn
 	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
 	if (Tutor && Tutor->HasAuthority())
 	{
-		Tutor->SetCanCombo(true);
-		Tutor->SetPlayAttackMode(PlayComboMode);
+		Tutor->SetRWeaponFinishFrame(true);
 	}
 }
 
