@@ -20,7 +20,7 @@ void UUIPlayerInfoView::NativeConstruct()
 		return;
 	}
 
-	ProgressBar_Health->SetPercent(MyTestCharcter->GetHP() / MyTestCharcter->GetMaxHP());
+	ProgressBar_Health->SetPercent(MyTestCharcter->GetCurrentHealth() / MyTestCharcter->GetMaxHealth());
 	EditTexBx_Name->SetText(FText::FromName(MyTestCharcter->GetCharacterName()));
 
 	Btn_ChangeName->OnClicked.AddDynamic(this, &UUIPlayerInfoView::OnBtnChangeName_Down);

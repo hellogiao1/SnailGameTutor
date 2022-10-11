@@ -123,7 +123,7 @@ protected:
 
 	virtual void OnHealthUpdate() override;
 
-	virtual void OnCharcterDied() override;
+	virtual void Destroyed() override;
 
 public:
 	virtual void Tick(float DeltaTime) override;
@@ -136,6 +136,7 @@ public:
 	/** Returns QuestComponent **/
 	FORCEINLINE class UQuestComponent* GetQuestComponent() const { return QuestComp; }
 
+	UFUNCTION(Client, Reliable)
 	void Died();
 
 	float GetLevel();

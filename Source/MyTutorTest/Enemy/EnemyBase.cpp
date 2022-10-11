@@ -9,51 +9,8 @@
 
 AEnemyBase::AEnemyBase()
 {
-	CurrHP = 100.f;
-	MaxHP = 100.f;
-
 	HeadTipComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HeadInfo"));
 	HeadTipComp->SetupAttachment(RootComponent);
-}
-
-void AEnemyBase::ApplyDamage(float NewDamge)
-{
-	
-}
-
-float AEnemyBase::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-{
-	if (Damage == 0 || CurrHP <= 0)
-		return 0;
-
-	CurrHP -= Damage;
-	CurrHP = FMath::Clamp(CurrHP, 0, MaxHP);
-
-	if (CurrHP <= 0)
-	{
-		DiedPhysicsEffect();
-
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AEnemyBase::K2_DestroyActor, 2.f);
-	}
-
-	return Damage;
-}
-
-void AEnemyBase::OnRep_CurrHP()
-{
-	if (HeadUI)
-	{
-		HeadUI->SetHeadTipforBloodPerctg(CurrHP / MaxHP);
-	}
-}
-
-void AEnemyBase::OnRep_MaxHP()
-{
-	if (HeadUI)
-	{
-		HeadUI->SetHeadTipforBloodPerctg(CurrHP / MaxHP);
-	}
 }
 
 void AEnemyBase::BeginPlay()
@@ -67,30 +24,43 @@ void AEnemyBase::BeginPlay()
 			HeadUI = Cast<UUIHeadTipBar>(HeadTipComp->GetWidget());
 			if (HeadUI)
 			{
-				HeadUI->SetHeadTipforBloodPerctg(CurrHP / MaxHP);
+				HeadUI->SetHeadTipforBloodPerctg(CurrentHealth / MaxHealth);
 			}
 		}
 	}
-	
+
 }
 
-void AEnemyBase::DiedPhysicsEffect_Implementation()
+void AEnemyBase::OnCharcterDied()
 {
-	if (GetMesh() == nullptr || HasAuthority())
-		return;
-
-	GetMesh()->SetAllBodiesSimulatePhysics(true);
-	GetMesh()->SetAllBodiesPhysicsBlendWeight(1.0f);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-
-	UKismetSystemLibrary::PrintString(GetWorld());
-
+	Super::OnCharcterDied();
 }
 
-void AEnemyBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AEnemyBase::OnHealthUpdate()
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	//所有模拟端需要走的功能
+	if (GetLocalRole() != ROLE_Authority)
+	{
+		if (HeadUI)
+		{
+			HeadUI->SetHeadTipforBloodPerctg(CurrentHealth / MaxHealth);
+		}
 
-	DOREPLIFETIME_CONDITION(AEnemyBase, CurrHP, COND_None);
-	DOREPLIFETIME_CONDITION(AEnemyBase, MaxHP, COND_None);
+	}
+
+	//服务器特定的功能
+	if (GetLocalRole() == ROLE_Authority)
+	{
+
+	}
+
+	//在所有机器上都执行的函数。 
+	/*
+		因任何因伤害或死亡而产生的特殊功能都应放在这里。
+	*/
+	if (CurrentHealth <= 0)
+	{
+		OnCharcterDied();
+	}
 }
+

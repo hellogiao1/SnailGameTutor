@@ -224,21 +224,6 @@ void AMyTutorTestCharacter::OnHealthUpdate()
 	{
 		OnPropertyChange.Broadcast(CurrentHealth / MaxHealth, FText::FromName(CharacterName));
 
-		if (CurrentHealth <= 0)
-		{
-			Died();
-		}
-	}
-
-	//服务器特定的功能
-	if (GetLocalRole() == ROLE_Authority)
-	{
-
-	}
-
-	//客户端和模拟端走的功能
-	if (GetLocalRole() != ROLE_Authority)
-	{
 		if (HeadTipWidgetComp && HeadTipWidgetComp->GetWidget())
 		{
 			UUIHeadTipBar* UIHead = Cast<UUIHeadTipBar>(HeadTipWidgetComp->GetWidget());
@@ -248,22 +233,38 @@ void AMyTutorTestCharacter::OnHealthUpdate()
 				UIHead->SetHeadTipforBloodPerctg(CurrentHealth / MaxHealth);
 			}
 		}
+
+		if (CurrentHealth <= 0)
+		{
+			Died();
+		}
+	}
+
+	//服务器特定的功能
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		if (CurrentHealth <= 0)
+		{
+			Destroy();
+		}
 	}
 
 	//在所有机器上都执行的函数。 
 	/*
 		因任何因伤害或死亡而产生的特殊功能都应放在这里。
 	*/
-	if (CurrentHealth <= 0.f)
-	{
-		OnCharcterDied();
-	}
-	
 }
 
-void AMyTutorTestCharacter::OnCharcterDied()
+void AMyTutorTestCharacter::Destroyed()
 {
-	Super::OnCharcterDied();
+	if (HasAuthority())
+	{
+		UKismetSystemLibrary::PrintString(GetWorld());
+	}
+
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
+	GetMesh()->SetAllBodiesPhysicsBlendWeight(1.0f);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 }
 
 void AMyTutorTestCharacter::Tick(float DeltaTime)
@@ -532,7 +533,7 @@ void AMyTutorTestCharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrup
 	
 }
 
-void AMyTutorTestCharacter::Died()
+void AMyTutorTestCharacter::Died_Implementation()
 {
 	if (UIDiedClass != nullptr)
 	{

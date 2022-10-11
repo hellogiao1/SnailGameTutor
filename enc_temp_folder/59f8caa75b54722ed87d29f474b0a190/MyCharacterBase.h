@@ -50,9 +50,6 @@ protected:
 	/** 响应要更新的生命值。修改后，立即在服务器上调用，并在客户端上调用以响应RepNotify*/
 	virtual void OnHealthUpdate();
 
-	/** 当角色死亡的时候，根据各个客户端不同而发生不同的表现 */
-	virtual void OnCharcterDied();
-
 public:
 	/** 最大生命值的取值函数。*/
     UFUNCTION(BlueprintPure, Category="Health")

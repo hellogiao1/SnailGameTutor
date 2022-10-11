@@ -85,27 +85,6 @@ void AMyCharacterBase::OnHealthUpdate()
 	*/
 }
 
-void AMyCharacterBase::OnCharcterDied()
-{
-	if (HasAuthority())
-	{
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AMyCharacterBase::K2_DestroyActor, 2.f, false);
-	}
-
-	if (!HasAuthority())
-	{
-		if (GetMesh() == nullptr)
-		{
-			return;
-		}
-
-		GetMesh()->SetAllBodiesSimulatePhysics(true);
-		GetMesh()->SetAllBodiesPhysicsBlendWeight(1.0f);
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	}
-}
-
 void AMyCharacterBase::SetCurrentHealth(float healthValue)
 {
 	if (GetLocalRole() == ROLE_Authority)

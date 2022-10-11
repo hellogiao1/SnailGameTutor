@@ -15,6 +15,6 @@ void ASword::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherA
 {
 	if (AEnemyBase* Enemy = Cast<AEnemyBase>(OtherActor))
 	{
-		Enemy->ApplyDamage(Attack);
+		
 	}
 }

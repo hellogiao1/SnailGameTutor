@@ -30,7 +30,7 @@ void AMyPlayerController::BeginPlay()
 			if (UIStatusBar)
 			{
 				UIStatusBar->SetCharacterName(FText::FromName(TutorChar->GetCharacterName()));
-				UIStatusBar->SetHealthPercentage(TutorChar->GetHP() / TutorChar->GetMaxHP());
+				UIStatusBar->SetHealthPercentage(TutorChar->GetCurrentHealth() / TutorChar->GetMaxHealth());
 				UIStatusBar->AddToViewport();
 			}
 			TutorChar->OnCharHit.AddUObject(UIStatusBar, &UUIPlayerProperty::SetHealthPercentage);

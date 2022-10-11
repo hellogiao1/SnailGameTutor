@@ -29,7 +29,8 @@ protected:
 	结果，所有玩家都会看到投射物被摧毁时的爆炸效果。 */
 	virtual void Destroyed() override;
 
-	virtual void OnCharcterDied();
+	/** RepNotify，用于同步对当前生命值所做的更改。*/
+    virtual void OnRep_CurrentHealth();
 
 	/** 响应要更新的生命值。修改后，立即在服务器上调用，并在客户端上调用以响应RepNotify*/
 	virtual void OnHealthUpdate();

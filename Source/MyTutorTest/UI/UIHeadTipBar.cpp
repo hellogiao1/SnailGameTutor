@@ -20,6 +20,11 @@ void UUIHeadTipBar::SetHeadTipforName(const FText& TextName)
 
 void UUIHeadTipBar::SetHeadTipforBloodPerctg(const float Percentage)
 {
+	if (ProgressBar_Blood == nullptr)
+	{
+		return;
+	}
+
 	if (ProgressBar_Blood->GetVisibility() != ESlateVisibility::Visible)
 	{
 		ProgressBar_Blood->SetVisibility(ESlateVisibility::Visible);
