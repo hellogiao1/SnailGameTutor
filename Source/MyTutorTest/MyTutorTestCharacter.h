@@ -22,6 +22,7 @@ enum class EAttackType : uint8
 
 class UUIPlayerProperty;
 class UUI_HUD;
+class AEquipObject;
 
 UCLASS(config=Game)
 class AMyTutorTestCharacter : public AMyCharacterBase, public IAbilitySystemInterface
@@ -83,6 +84,9 @@ public:
 
 	UFUNCTION()
 	void OnRep_FightState();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void NetMult_PlayMontage(UAnimMontage* Montage);
 
 protected:
 
@@ -176,6 +180,9 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Fight")
 	void Server_SwitchState();
 
+// 	/** 切换武器 */
+// 	void Server_SwitchWeapon();
+
 	/** 通知服务器执行普通攻击 */
 	UFUNCTION(Server, Reliable)
 	void Server_AttackNotify(EAttackType AttackType);
@@ -183,6 +190,11 @@ public:
 	/** 通知修改攻击帧是否结束 */
 	bool SetRWeaponFinishFrame(bool bFishFrame);
 
+	/** 获取武器实例 */
+	AEquipObject* GetRightWeaponInst();
+
+private:
+	void NormalAttack();
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true"), ReplicatedUsing = OnRep_CurrentHealth)

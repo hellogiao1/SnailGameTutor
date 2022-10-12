@@ -6,6 +6,7 @@
 #include "Components/SceneComponent.h"
 #include "../Equipment/Sword.h"
 #include "Net/UnrealNetwork.h"
+#include "../MyPlayerController.h"
 
 // Sets default values
 AMyCharacterBase::AMyCharacterBase()
@@ -25,9 +26,6 @@ AMyCharacterBase::AMyCharacterBase()
 
 	LeftWeaponComp->SetRelativeLocation(FVector(15.611130, 1.656690, -1.495595));
 	LeftWeaponComp->SetRelativeRotation(FRotator(1.059581, -13.419556, 89.936722));
-
-	RightWeaponComp->SetHiddenInGame(true);
-	LeftWeaponComp->SetHiddenInGame(true);
 
 	//初始化玩家生命值
 	MaxHealth = 100.0f;
@@ -119,6 +117,10 @@ float AMyCharacterBase::TakeDamage(float DamageTaken, struct FDamageEvent const&
 {
 	float damageApplied = CurrentHealth - DamageTaken;
 	SetCurrentHealth(damageApplied);
+	if (GetController() && Cast<AMyPlayerController>(EventInstigator))
+	{
+		Cast<AMyPlayerController>(EventInstigator)->ShowDamageNumber(DamageTaken, this);
+	}
 	return damageApplied;
 }
 

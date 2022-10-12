@@ -41,9 +41,6 @@ public:
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "AttackArea == EAttackArea::Sector", EditConditionHides))
 	float Angle = 45.f;
 
-	UPROPERTY(EditAnywhere, Category = "ComboMode")
-	int32 PlayComboMode = -1;
-
 private:
 	UPROPERTY()
 	TArray<AActor*> ActorsToIgnore;

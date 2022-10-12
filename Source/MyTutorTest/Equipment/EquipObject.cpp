@@ -6,6 +6,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
 #include "../Player/MyCharacterBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "../MyTutorTestCharacter.h"
 
 // Sets default values
 AEquipObject::AEquipObject()
@@ -30,6 +32,8 @@ AEquipObject::AEquipObject()
 	IsAttacking = false;
 	CanCombo = false;
 	bHitFrameFinish = false;
+
+	//bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -47,13 +51,13 @@ void AEquipObject::OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 void AEquipObject::PlayMontage_Internal(int32 Index)
 {
-	AMyCharacterBase* CharBase = Cast<AMyCharacterBase>(GetOwner());
-	if (CharBase && CharBase->GetMesh())
+	if (UAnimInstance* AnimInstance = GetAnimInst())
 	{
-		UAnimInstance* AnimInstance = CharBase->GetMesh()->GetAnimInstance();
+		
 		if (AnimInstance && AttackMontages.IsValidIndex(Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[Index]))
 		{
-			NetMult_PlayMontage(AnimInstance);
+			Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))->NetMult_PlayMontage(AttackMontages[Index]);
+			//NetMult_PlayMontage(AnimInstance);
 
 			MontageEndedDelegate.BindUObject(this, &AEquipObject::OnMontageEnded);
 			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[Index]);
@@ -101,7 +105,7 @@ void AEquipObject::SetbHitFrameFinish(bool NewValue)
 
 void AEquipObject::Excute_NormalAttack()
 {
-	if (bHitFrameFinish == false)
+	if (AttackMontages.IsEmpty() || GetAnimInst() == nullptr)
 	{
 		return;
 	}
@@ -114,7 +118,7 @@ void AEquipObject::Excute_NormalAttack()
 
 		PlayMontage_Internal(CurrPlayAnimMont_Index);
 	}
-	else
+	else if (bHitFrameFinish)
 	{
 		//当攻击帧结束，且可以连击的时候
 		if (CanCombo)
@@ -149,5 +153,11 @@ void AEquipObject::ResetAttackMontValue()
 	IsAttacking = false;
 	CurrPlayAnimMont_Index = 0;
 	bHitFrameFinish = false;
+}
+
+UAnimInstance* AEquipObject::GetAnimInst()
+{
+	USkeletalMeshComponent* Mesh = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0) ? UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetMesh() : nullptr;
+	return Mesh ? Mesh->GetAnimInstance() : nullptr;
 }
 

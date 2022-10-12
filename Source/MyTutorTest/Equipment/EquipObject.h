@@ -35,6 +35,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttackMontage")
 	TArray<UAnimMontage*> AttackMontages;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttackMontage", meta = (AllowedClasses = "UAnimMontage"))
+	TArray<FSoftObjectPath> ObjectsPath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttackMontage", meta = (AllowedClasses = "UStaticMesh"))
+	FSoftObjectPath ObjectsPath1;
+
+
 public:
 	FORCEINLINE bool GetCanCombo() const { return CanCombo; }
 	void SetCanCombo(bool canCombo);
@@ -68,12 +75,14 @@ protected:
 
 	virtual void ResetAttackMontValue();
 
+	UAnimInstance* GetAnimInst();
+
 protected:
 	//是否可以连击
 	bool CanCombo;
 
 	//是否在攻击
-	bool IsAttacking;
+	bool IsAttacking = false;
 
 	int32 CurrPlayAnimMont_Index = -1;
 

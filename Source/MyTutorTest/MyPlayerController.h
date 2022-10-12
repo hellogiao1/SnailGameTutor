@@ -38,6 +38,10 @@ public:
 	///** 显示交互对象的名字 */
 	//void ShowInteracName(AActor* Target);
 	//void CloseInteracName();
+
+	/** 伤害跳字 */
+	UFUNCTION(Client, Reliable)
+	void ShowDamageNumber(float DamageAmout, AMyCharacterBase* TargetCharacter);
 	
 public:
 	void Push(UUserWidget* Widget = nullptr, bool Hidden = true, bool Throw = false);
@@ -90,4 +94,6 @@ private:
 	class UUIOnProgressTipBar* ProgressUI;
 
 	//class UUIAcceptQuest* AcceptUI;
+	UPROPERTY(EditAnywhere, Category = "GASDocumentation|UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class UGDDamageTextWidgetComponent> DamageNumberClass;
 };

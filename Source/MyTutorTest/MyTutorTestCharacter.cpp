@@ -98,8 +98,16 @@ void AMyTutorTestCharacter::SetRWeaponGeneOverlap(bool bInGeneraOverlap)
 
 void AMyTutorTestCharacter::OnRep_FightState()
 {
-	RightWeaponComp->SetHiddenInGame(!bFightState);
-	LeftWeaponComp->SetHiddenInGame(!bFightState);
+	AActor* TempActorL = LeftWeaponComp->GetChildActor();
+	if (LeftWeaponComp)
+	{
+		LeftWeaponComp->SetHiddenInGame(!bFightState);
+	}
+
+	if (RightWeaponComp)
+	{
+		RightWeaponComp->SetHiddenInGame(!bFightState);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -266,6 +274,15 @@ void AMyTutorTestCharacter::OnCharcterDied()
 	Super::OnCharcterDied();
 }
 
+void AMyTutorTestCharacter::NetMult_PlayMontage_Implementation(UAnimMontage* Montage)
+{
+	UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
+	if (AnimInst)
+	{
+		AnimInst->Montage_Play(Montage);
+	}
+}
+
 void AMyTutorTestCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -384,6 +401,12 @@ bool AMyTutorTestCharacter::SetRWeaponFinishFrame(bool bFishFrame)
 		return true;
 	}
 	return false;
+}
+
+AEquipObject* AMyTutorTestCharacter::GetRightWeaponInst()
+{
+	AEquipObject* EquipObject = RightWeaponComp ? Cast<AEquipObject>(RightWeaponComp->GetChildActor()) : nullptr;
+	return EquipObject;
 }
 
 void AMyTutorTestCharacter::NormalAttack()

@@ -24,5 +24,8 @@ public:
 	// Overridden from UAnimNotifyState to provide custom notify name.
 	FString GetNotifyName_Implementation() const override;
 
-
+public:
+	//If false, the CanCombo variable is not reset
+	UPROPERTY(EditAnywhere)
+	bool bReset = true;
 };

@@ -10,6 +10,7 @@
 #include "UI/Quest/QuestMain.h"
 #include "UI/Quest/UIOnProgressTipBar.h"
 #include "UI/Quest/Child/UIAcceptQuest.h"
+#include "Components/GDDamageTextWidgetComponent.h"
 
 void AMyPlayerController::BeginPlay()
 {
@@ -140,6 +141,19 @@ void AMyPlayerController::CloseProgressQuest()
 	{
 		UIHUD->CloseProgressView();
 	}
+}
+
+void AMyPlayerController::ShowDamageNumber_Implementation(float DamageAmout, AMyCharacterBase* TargetCharacter)
+{
+	if (DamageNumberClass == nullptr)
+	{
+		return;
+	}
+
+	UGDDamageTextWidgetComponent* DamageText = NewObject<UGDDamageTextWidgetComponent>(TargetCharacter, DamageNumberClass);
+	DamageText->RegisterComponent();
+	DamageText->AttachToComponent(TargetCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	DamageText->SetDamageText(DamageAmout);
 }
 
 //void AMyPlayerController::ShowInteracName(AActor* Target)

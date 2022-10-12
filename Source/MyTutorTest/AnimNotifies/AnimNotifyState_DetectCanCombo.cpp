@@ -3,35 +3,38 @@
 
 #include "AnimNotifyState_DetectCanCombo.h"
 #include "../MyTutorTestCharacter.h"
+#include "MyTutorTest/Equipment/EquipObject.h"
 
 
 void UAnimNotifyState_DetectCanCombo::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
+	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
+	if (Tutor && Tutor->HasAuthority() && Tutor->GetRightWeaponInst())
+	{
+		Tutor->GetRightWeaponInst()->SetCanCombo(true);
+	}
 }
 
 void UAnimNotifyState_DetectCanCombo::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
-	if (Tutor && Tutor->HasAuthority() && Tutor->GetbComboClick() == false)
-	{
-		Tutor->SetPlayAttackMode(2);
-		Tutor->SetbComboClick(true);
-	}
+	
 }
 
 void UAnimNotifyState_DetectCanCombo::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 
-	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
-	if (Tutor && Tutor->HasAuthority() && Tutor->GetbComboClick() == false)
+	if (bReset)
 	{
-		Tutor->SetPlayAttackMode(-1);
-		Tutor->SetbComboClick(false);
+		AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(MeshComp->GetOwner());
+		if (Tutor && Tutor->HasAuthority() && Tutor->GetRightWeaponInst())
+		{
+			Tutor->GetRightWeaponInst()->SetCanCombo(false);
+		}
 	}
 }
 
