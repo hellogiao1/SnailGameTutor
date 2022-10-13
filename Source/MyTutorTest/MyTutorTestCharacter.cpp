@@ -83,6 +83,8 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 
 	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 
+	CurrWeaponIndex = -1;
+
 }
 
 void AMyTutorTestCharacter::SetRWeaponGeneOverlap(bool bInGeneraOverlap)
@@ -123,7 +125,8 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("OpenQuest", IE_Pressed, this, &AMyTutorTestCharacter::OpenQuestUI);
 	PlayerInputComponent->BindAction("Interaction", IE_Pressed, this, &AMyTutorTestCharacter::OnInteractiveInput);
 	PlayerInputComponent->BindAction("SwitchFightState", IE_Pressed, this, &AMyTutorTestCharacter::Server_SwitchState);
-	//PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyTutorTestCharacter::NormalAttack);
+	PlayerInputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &AMyTutorTestCharacter::Server_SwitchWeapon);
+	/*PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyTutorTestCharacter::NormalAttack);*/
 	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AMyTutorTestCharacter::AcceleRun);
 
 	PlayerInputComponent->BindAxis("Move Forward / Backward", this, &AMyTutorTestCharacter::MoveForward);
@@ -185,6 +188,16 @@ void AMyTutorTestCharacter::BeginPlay()
 	for (TSubclassOf<UAttributeSet>& Set : AttributeSets)
 	{
 		AbilitySystem->InitStats(Set, AttrDataTable);
+	}
+
+	if (RightWeaponComp)
+	{
+		RightWeaponComp->SetHiddenInGame(!bFightState);
+	}
+
+	if (LeftWeaponComp)
+	{
+		LeftWeaponComp->SetHiddenInGame(!bFightState);
 	}
 }
 
@@ -376,6 +389,37 @@ void AMyTutorTestCharacter::NotifyQuestReachPos(FVector TargetPosition, bool bRe
 void AMyTutorTestCharacter::Server_SwitchState_Implementation()
 {
 	bFightState = !bFightState;
+	
+	if (RightWeaponComp && RightWeaponComp->GetChildActor() == false)
+	{
+		Server_SwitchWeapon();
+	}
+}
+
+void AMyTutorTestCharacter::Server_SwitchWeapon_Implementation()
+{
+	if (bFightState)
+	{
+		NetMul_SwitchWeapon();
+	}
+}
+
+void AMyTutorTestCharacter::NetMul_SwitchWeapon_Implementation()
+{
+	if (EquipClassPaths.Num())
+	{
+		CurrWeaponIndex = (CurrWeaponIndex + 1) % EquipClassPaths.Num();
+
+		if (RightWeaponComp)
+		{
+			RightWeaponComp->SetChildActorClass(EquipClassPaths[CurrWeaponIndex].TryLoadClass<AEquipObject>());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s(), switch Weapon failed"), *FString(__FUNCTION__));
+		return;
+	}
 }
 
 void AMyTutorTestCharacter::Server_AttackNotify_Implementation(EAttackType AttackType)

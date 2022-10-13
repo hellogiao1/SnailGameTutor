@@ -135,10 +135,7 @@ void AEquipObject::Excute_NormalAttack()
 			NormalCombo();
 
 			PlayMontage_Internal(CurrPlayAnimMont_Index);
-
 		}
-
-
 	}
 }
 

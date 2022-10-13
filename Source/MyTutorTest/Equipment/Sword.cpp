@@ -27,7 +27,7 @@ void ASword::NormalCombo()
 
 void ASword::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (IsAttacking && CanCombo)
+	if (bHitFrameFinish && CanCombo)
 	{
 		//在攻击帧后的时候被打断或者结束动画，延迟1s去重置
 		GetWorld()->GetTimerManager().SetTimer(DelayAttackHandle, this, &ASword::ResetAttackMontValue, 1.f, false);

@@ -7,6 +7,7 @@
 #include "Player/MyCharacterBase.h"
 #include "AbilitySystemInterface.h"
 #include "Animation/AnimInstance.h"
+#include "UObject/SoftObjectPath.h"
 #include "MyTutorTestCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDamageSignature, float);
@@ -180,8 +181,17 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Fight")
 	void Server_SwitchState();
 
-// 	/** 切换武器 */
-// 	void Server_SwitchWeapon();
+	//武器类的子类class
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (MetaClass="EquipObject"), Category = "Equipment")
+	TArray<FSoftClassPath> EquipClassPaths;
+
+	/** 切换武器 */
+	UFUNCTION(Server, Reliable)
+	void Server_SwitchWeapon();
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void NetMul_SwitchWeapon();
+	int32 CurrWeaponIndex;
 
 	/** 通知服务器执行普通攻击 */
 	UFUNCTION(Server, Reliable)
