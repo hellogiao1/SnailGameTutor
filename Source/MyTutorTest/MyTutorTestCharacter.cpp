@@ -287,10 +287,14 @@ void AMyTutorTestCharacter::OnCharcterDied()
 
 void AMyTutorTestCharacter::NetMult_PlayMontage_Implementation(UAnimMontage* Montage)
 {
-	UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
-	if (AnimInst)
+	//模拟端和服务端进行播放动画
+	if (GetLocalRole() != ROLE_AutonomousProxy)
 	{
-		AnimInst->Montage_Play(Montage);
+		UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
+		if (AnimInst)
+		{
+			AnimInst->Montage_Play(Montage);
+		}
 	}
 }
 
@@ -486,6 +490,22 @@ void AMyTutorTestCharacter::LoopSwitchWeapon()
 	}
 }
 
+void AMyTutorTestCharacter::AttackBtn_Down(EAttackType AttackType)
+{
+	switch (AttackType)
+	{
+	case EAttackType::Normal:
+	{
+		NormalAttack();
+	}
+	break;
+	default:
+		break;
+	}
+
+	Server_AttackNotify(AttackType);
+}
+
 void AMyTutorTestCharacter::Server_AttackNotify_Implementation(EAttackType AttackType)
 {
 	switch (AttackType)
@@ -498,6 +518,22 @@ void AMyTutorTestCharacter::Server_AttackNotify_Implementation(EAttackType Attac
 	default:
 		break;
 	}
+}
+
+void AMyTutorTestCharacter::AttackBtn_Release(EAttackType AttackType)
+{
+	switch (AttackType)
+	{
+	case EAttackType::Normal:
+	{
+		NormalAttackBtn_Release();
+	}
+	break;
+	default:
+		break;
+	}
+
+	Server_AttackBtn_Release(AttackType);
 }
 
 void AMyTutorTestCharacter::Server_AttackBtn_Release_Implementation(EAttackType AttackType)

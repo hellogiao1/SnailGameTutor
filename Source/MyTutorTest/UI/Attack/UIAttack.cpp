@@ -20,7 +20,7 @@ void UUIAttack::OnAttackBtn_Down()
 	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (Tutor)
 	{
-		Tutor->Server_AttackNotify(EAttackType::Normal);
+		Tutor->AttackBtn_Down(EAttackType::Normal);
 	}
 }
 
@@ -29,6 +29,6 @@ void UUIAttack::OnAttackBtn_Release()
 	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (Tutor)
 	{
-		Tutor->Server_AttackBtn_Release(EAttackType::Normal);
+		Tutor->AttackBtn_Release(EAttackType::Normal);
 	}
 }

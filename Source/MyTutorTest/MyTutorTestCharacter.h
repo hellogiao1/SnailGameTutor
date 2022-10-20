@@ -215,7 +215,12 @@ public:
 	/** 循环切换武器 */
 	void LoopSwitchWeapon();
 
-	/** 通知服务器执行普通攻击 */
+	/** 客户端先执行攻击 */
+	void AttackBtn_Down(EAttackType AttackType);
+	/** 当攻击按键松开的时候 */
+	void AttackBtn_Release(EAttackType AttackType);
+
+	/** 同时通知服务器执行普通攻击 */
 	UFUNCTION(Server, Reliable)
 	void Server_AttackNotify(EAttackType AttackType);
 

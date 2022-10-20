@@ -8,6 +8,7 @@
 #include "../Player/MyCharacterBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "../MyTutorTestCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AEquipObject::AEquipObject()
@@ -37,6 +38,16 @@ AEquipObject::AEquipObject()
 	bReplicates = true;
 }
 
+void AEquipObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AEquipObject, CanCombo);
+	DOREPLIFETIME(AEquipObject, IsAttacking);
+	DOREPLIFETIME(AEquipObject, bHitFrameFinish);
+	DOREPLIFETIME(AEquipObject, CurrPlayAnimMont_Index);
+}
+
 // Called when the game starts or when spawned
 void AEquipObject::BeginPlay()
 {
@@ -54,11 +65,17 @@ void AEquipObject::PlayMontage_Internal(int32 Index)
 {
 	if (UAnimInstance* AnimInstance = GetAnimInst())
 	{
-		
 		if (AnimInstance && AttackMontages.IsValidIndex(Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[Index]))
 		{
-			Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))->NetMult_PlayMontage(AttackMontages[Index]);
-			//NetMult_PlayMontage(AnimInstance);
+			AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+			if (Tutor)
+			{
+				Tutor->NetMult_PlayMontage(AttackMontages[Index]);
+			}
+
+			//本地客户端执行
+			PlayMontageAsClient(AnimInstance);
+
 
 			MontageEndedDelegate.BindUObject(this, &AEquipObject::OnMontageEnded);
 			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[Index]);
@@ -71,11 +88,14 @@ void AEquipObject::PlayMontage_Internal(int32 Index)
 	
 }
 
-void AEquipObject::NetMult_PlayMontage_Implementation(UAnimInstance* AnimInst)
+void AEquipObject::PlayMontageAsClient(UAnimInstance* AnimInst)
 {
-	if (AnimInst)
+	if (GetLocalRole() != ROLE_Authority)
 	{
-		AnimInst->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+		if (AnimInst)
+		{
+			AnimInst->Montage_Play(AttackMontages[CurrPlayAnimMont_Index]);
+		}
 	}
 }
 

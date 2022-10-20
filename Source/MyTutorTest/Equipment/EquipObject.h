@@ -15,6 +15,8 @@ class MYTUTORTEST_API AEquipObject : public AActor
 public:	
 	AEquipObject();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void Tick(float DeltaTime) override;
 
 	void SetGenerateOverlap(bool bInGeneOverlap);
@@ -72,8 +74,7 @@ protected:
 
 	void PlayMontage_Internal(int32 Index);
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void NetMult_PlayMontage(UAnimInstance* AnimInst);
+	void PlayMontageAsClient(UAnimInstance* AnimInst);
 
 	virtual void ResetAttackMontValue();
 
@@ -81,13 +82,17 @@ protected:
 
 protected:
 	//是否可以连击
+	UPROPERTY(Replicated)
 	bool CanCombo;
 
 	//是否在攻击
+	UPROPERTY(Replicated)
 	bool IsAttacking;
 
+	UPROPERTY(Replicated)
 	int32 CurrPlayAnimMont_Index;
 
 	//攻击帧是否结束
+	UPROPERTY(Replicated)
 	bool bHitFrameFinish;
 };
