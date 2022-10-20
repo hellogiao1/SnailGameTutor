@@ -51,6 +51,8 @@ public:
 
 	virtual void Excute_NormalAttack();
 
+	virtual void OnNormalBtn_Release() {};
+
 protected:
 	FOnMontageEnded MontageEndedDelegate;
 
@@ -64,7 +66,7 @@ protected:
 protected:
 	virtual void BeginPlay() override;
 
-	//碰撞事件，空实现，在子类重写
+	/** 碰撞事件，空实现，在子类重写 */
 	UFUNCTION()
 	virtual void OnHitActor(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -82,9 +84,9 @@ protected:
 	bool CanCombo;
 
 	//是否在攻击
-	bool IsAttacking = false;
+	bool IsAttacking;
 
-	int32 CurrPlayAnimMont_Index = -1;
+	int32 CurrPlayAnimMont_Index;
 
 	//攻击帧是否结束
 	bool bHitFrameFinish;

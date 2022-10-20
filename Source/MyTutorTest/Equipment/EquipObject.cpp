@@ -32,8 +32,9 @@ AEquipObject::AEquipObject()
 	IsAttacking = false;
 	CanCombo = false;
 	bHitFrameFinish = false;
+	CurrPlayAnimMont_Index = -1;
 
-	//bReplicates = true;
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned

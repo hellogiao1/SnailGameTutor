@@ -8,6 +8,8 @@ public class MyTutorTest : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "UMG", "SlateCore", "Slate", "GameplayAbilities" });
+        OptimizeCode = CodeOptimization.Never;
+
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "UMG", "SlateCore", "Slate", "GameplayAbilities" });
 	}
 }

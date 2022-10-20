@@ -10,7 +10,8 @@ void UUIAttack::NativeConstruct()
 {
 	if (Btn_Attack)
 	{
-		Btn_Attack->OnClicked.AddDynamic(this, &UUIAttack::OnAttackBtn_Down);
+		Btn_Attack->OnPressed.AddDynamic(this, &UUIAttack::OnAttackBtn_Down);
+		Btn_Attack->OnReleased.AddDynamic(this, &UUIAttack::OnAttackBtn_Release);
 	}
 }
 
@@ -20,5 +21,14 @@ void UUIAttack::OnAttackBtn_Down()
 	if (Tutor)
 	{
 		Tutor->Server_AttackNotify(EAttackType::Normal);
+	}
+}
+
+void UUIAttack::OnAttackBtn_Release()
+{
+	AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (Tutor)
+	{
+		Tutor->Server_AttackBtn_Release(EAttackType::Normal);
 	}
 }

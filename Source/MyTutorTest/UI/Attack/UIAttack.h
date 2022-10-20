@@ -24,4 +24,7 @@ public:
 private:
 	UFUNCTION()
 	void OnAttackBtn_Down();
+
+	UFUNCTION()
+	void OnAttackBtn_Release();
 };

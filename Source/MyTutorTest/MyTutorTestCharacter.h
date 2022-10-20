@@ -21,6 +21,25 @@ enum class EAttackType : uint8
 
 };
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	Fists,
+	MainHand,
+	MainHandAndShied,
+	Bow,
+	Magic,
+};
+
+USTRUCT(BlueprintType)
+struct FWeaponSofts 
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MetaClass = "EquipObject"))
+	TArray<FSoftClassPath> WeaponSoftArray;
+};
+
 class UUIPlayerProperty;
 class UUI_HUD;
 class AEquipObject;
@@ -177,34 +196,54 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "QuestFlush")
 	void NotifyQuestReachPos(FVector TargetPosition, bool bReach);
 
-	/** Fight */
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Fight")
+#pragma region CombatSystem
+public:
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "CombatSystem")
 	void Server_SwitchState();
 
-	//武器类的子类class
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (MetaClass="EquipObject"), Category = "Equipment")
-	TArray<FSoftClassPath> EquipClassPaths;
+	//武器类的子类class软引用
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CombatSystem")
+	TMap<EWeaponType, FWeaponSofts> Map_WeaponClassPaths;
 
 	/** 切换武器 */
 	UFUNCTION(Server, Reliable)
-	void Server_SwitchWeapon();
-	
+	void Server_SwitchWeapon(EWeaponType WeaponType = EWeaponType::MainHandAndShied);
+
 	UFUNCTION(NetMulticast, Unreliable)
-	void NetMul_SwitchWeapon();
-	int32 CurrWeaponIndex;
+	void NetMul_SwitchWeapon(EWeaponType WeaponType);
+
+	/** 循环切换武器 */
+	void LoopSwitchWeapon();
 
 	/** 通知服务器执行普通攻击 */
 	UFUNCTION(Server, Reliable)
 	void Server_AttackNotify(EAttackType AttackType);
 
+	UFUNCTION(Server, Reliable)
+	void Server_AttackBtn_Release(EAttackType AttackType);
+
 	/** 通知修改攻击帧是否结束 */
 	bool SetRWeaponFinishFrame(bool bFishFrame);
 
-	/** 获取武器实例 */
+	/** 获取右手组件武器实例 */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	AEquipObject* GetRightWeaponInst();
+
+	/** 获取左手组件武器实例 */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	AEquipObject* GetLeftWeaponInst();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
+	EWeaponType GetCurrentWeaponOutput();
+	
+	void SetCurrentWeaponType(EWeaponType NewWeaponType);
 
 private:
 	void NormalAttack();
+	void NormalAttackBtn_Release();
+
+	EWeaponType CurrentWeaponType;
+#pragma endregion CombatSystem
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true"), ReplicatedUsing = OnRep_CurrentHealth)

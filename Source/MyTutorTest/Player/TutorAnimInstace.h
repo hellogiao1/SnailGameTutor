@@ -15,9 +15,19 @@ class MYTUTORTEST_API UTutorAnimInstace : public UAnimInstance
 	GENERATED_BODY()
 	
 public:
+	UTutorAnimInstace();
+
 	virtual void NativeInitializeAnimation() override;
 
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
-public:
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RangedAsset")
+	bool bArrowLoaded;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RangedAsset")
+	bool bFiringArrow;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RangedAsset")
+	bool bBowAiming;
 };

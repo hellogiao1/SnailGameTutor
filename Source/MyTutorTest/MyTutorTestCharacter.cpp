@@ -83,8 +83,7 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 
 	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 
-	CurrWeaponIndex = -1;
-
+	CurrentWeaponType = EWeaponType::MainHandAndShied;
 }
 
 void AMyTutorTestCharacter::SetRWeaponGeneOverlap(bool bInGeneraOverlap)
@@ -100,7 +99,6 @@ void AMyTutorTestCharacter::SetRWeaponGeneOverlap(bool bInGeneraOverlap)
 
 void AMyTutorTestCharacter::OnRep_FightState()
 {
-	AActor* TempActorL = LeftWeaponComp->GetChildActor();
 	if (LeftWeaponComp)
 	{
 		LeftWeaponComp->SetHiddenInGame(!bFightState);
@@ -125,7 +123,7 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("OpenQuest", IE_Pressed, this, &AMyTutorTestCharacter::OpenQuestUI);
 	PlayerInputComponent->BindAction("Interaction", IE_Pressed, this, &AMyTutorTestCharacter::OnInteractiveInput);
 	PlayerInputComponent->BindAction("SwitchFightState", IE_Pressed, this, &AMyTutorTestCharacter::Server_SwitchState);
-	PlayerInputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &AMyTutorTestCharacter::Server_SwitchWeapon);
+	PlayerInputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &AMyTutorTestCharacter::LoopSwitchWeapon);
 	/*PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyTutorTestCharacter::NormalAttack);*/
 	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AMyTutorTestCharacter::AcceleRun);
 
@@ -392,33 +390,99 @@ void AMyTutorTestCharacter::Server_SwitchState_Implementation()
 	
 	if (RightWeaponComp && RightWeaponComp->GetChildActor() == false)
 	{
-		Server_SwitchWeapon();
+		Server_SwitchWeapon(EWeaponType::MainHandAndShied);
 	}
 }
 
-void AMyTutorTestCharacter::Server_SwitchWeapon_Implementation()
+void AMyTutorTestCharacter::Server_SwitchWeapon_Implementation(EWeaponType WeaponType)
 {
 	if (bFightState)
 	{
-		NetMul_SwitchWeapon();
+		NetMul_SwitchWeapon(WeaponType);
 	}
 }
 
-void AMyTutorTestCharacter::NetMul_SwitchWeapon_Implementation()
+void AMyTutorTestCharacter::NetMul_SwitchWeapon_Implementation(EWeaponType WeaponType)
 {
-	if (EquipClassPaths.Num())
+	if (Map_WeaponClassPaths.Num())
 	{
-		CurrWeaponIndex = (CurrWeaponIndex + 1) % EquipClassPaths.Num();
-
-		if (RightWeaponComp)
+		switch (WeaponType)
 		{
-			RightWeaponComp->SetChildActorClass(EquipClassPaths[CurrWeaponIndex].TryLoadClass<AEquipObject>());
+		case EWeaponType::Fists:
+			break;
+		case EWeaponType::MainHand:
+			break;
+		case EWeaponType::MainHandAndShied:
+		{
+			if (RightWeaponComp && LeftWeaponComp)
+			{
+				UClass* LeftWeaponClass = Map_WeaponClassPaths[WeaponType].WeaponSoftArray[0].TryLoadClass<AEquipObject>();
+				LeftWeaponComp->SetChildActorClass(LeftWeaponClass);
+				LeftWeaponComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LHand_Shield"));
+
+				if (LeftWeaponComp->GetChildActor())
+				{
+					LeftWeaponComp->GetChildActor()->SetOwner(this);
+				}
+
+				UClass* RightWeaponClass = Map_WeaponClassPaths[WeaponType].WeaponSoftArray[1].TryLoadClass<AEquipObject>();
+				RightWeaponComp->SetChildActorClass(RightWeaponClass);
+				RightWeaponComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_rSocket"));
+
+				if (RightWeaponComp->GetChildActor())
+				{
+					RightWeaponComp->GetChildActor()->SetOwner(this);
+				}
+			}
 		}
+		break;
+		case EWeaponType::Bow:
+		{
+			if (LeftWeaponComp)
+			{
+				UClass* LeftWeaponClass = Map_WeaponClassPaths[WeaponType].WeaponSoftArray[0].TryLoadClass<AEquipObject>();
+				LeftWeaponComp->SetChildActorClass(LeftWeaponClass);
+				LeftWeaponComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("LHand_Bow"));
+
+				if (RightWeaponComp)
+				{
+					RightWeaponComp->DestroyChildActor();
+				}
+
+				if (LeftWeaponComp->GetChildActor())
+				{
+					LeftWeaponComp->GetChildActor()->SetOwner(this);
+				}
+			}
+		}
+		break;
+		case EWeaponType::Magic:
+			break;
+		default:
+			break;
+		}
+		
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s(), switch Weapon failed"), *FString(__FUNCTION__));
+		UE_LOG(LogTemp, Warning, TEXT("%s(),EquipClassPaths is empty,please fill in the blueprint "), *FString(__FUNCTION__));
 		return;
+	}
+}
+
+void AMyTutorTestCharacter::LoopSwitchWeapon()
+{
+	if (bFightState)
+	{
+		if (CurrentWeaponType == EWeaponType::MainHandAndShied)
+		{
+			CurrentWeaponType = EWeaponType::Bow;
+		}
+		else if (CurrentWeaponType == EWeaponType::Bow)
+		{
+			CurrentWeaponType = EWeaponType::MainHandAndShied;
+		}
+		Server_SwitchWeapon(CurrentWeaponType);
 	}
 }
 
@@ -429,6 +493,20 @@ void AMyTutorTestCharacter::Server_AttackNotify_Implementation(EAttackType Attac
 	case EAttackType::Normal:
 	{
 		NormalAttack();
+	}
+	break;
+	default:
+		break;
+	}
+}
+
+void AMyTutorTestCharacter::Server_AttackBtn_Release_Implementation(EAttackType AttackType)
+{
+	switch (AttackType)
+	{
+	case EAttackType::Normal:
+	{
+		NormalAttackBtn_Release();
 	}
 	break;
 	default:
@@ -453,14 +531,52 @@ AEquipObject* AMyTutorTestCharacter::GetRightWeaponInst()
 	return EquipObject;
 }
 
+AEquipObject* AMyTutorTestCharacter::GetLeftWeaponInst()
+{
+	AEquipObject* EquipObject = LeftWeaponComp ? Cast<AEquipObject>(LeftWeaponComp->GetChildActor()) : nullptr;
+	return EquipObject;
+}
+
+EWeaponType AMyTutorTestCharacter::GetCurrentWeaponOutput()
+{
+	return CurrentWeaponType;
+}
+
+void AMyTutorTestCharacter::SetCurrentWeaponType(EWeaponType NewWeaponType)
+{
+	CurrentWeaponType = NewWeaponType;
+}
+
 void AMyTutorTestCharacter::NormalAttack()
 {
 	if (bFightState)
 	{
 		AEquipObject* EquipObject = RightWeaponComp ? Cast<AEquipObject>(RightWeaponComp->GetChildActor()) : nullptr;
+		if (EquipObject == nullptr)
+		{
+			EquipObject = LeftWeaponComp ? Cast<AEquipObject>(LeftWeaponComp->GetChildActor()) : nullptr;
+		}
+
 		if (EquipObject)
 		{
 			EquipObject->Excute_NormalAttack();
+		}
+	}
+}
+
+void AMyTutorTestCharacter::NormalAttackBtn_Release()
+{
+	if (bFightState)
+	{
+		AEquipObject* EquipObject = RightWeaponComp ? Cast<AEquipObject>(RightWeaponComp->GetChildActor()) : nullptr;
+		if (EquipObject == nullptr)
+		{
+			EquipObject = LeftWeaponComp ? Cast<AEquipObject>(LeftWeaponComp->GetChildActor()) : nullptr;
+		}
+
+		if (EquipObject)
+		{
+			EquipObject->OnNormalBtn_Release();
 		}
 	}
 }

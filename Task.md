@@ -101,6 +101,18 @@ AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPl
 
 
 
+#### 2022/10.17 远程武器
+
+![img](Task.assets/133104425351740777.jpg)
+
+##### 解决方案：
+
+切换远程武器的时候，切换相关的动画蓝图（弓箭的BlendSpace，四个方向），锁定控制视角（Use Controller DesiredRotation为true，Orient Rotation To Movent 为false），人物朝着摄像机的朝向；
+
+制作AimOffset，通过9个动画序列位置
+
+观察动画蓝图进行相关动画知识使用
+
 -----
 
 
@@ -190,6 +202,16 @@ UHT中不让编译过
 
 1、使用childActor组件实现组装武器会出现同步问题，如何更好实现切换武器的思路，childactor组件上给childactor赋值，但是引擎没有自动帮你把Owner设置上去
 
-
+2、如何实现像动画蓝图中的给蒙太奇添加通知，在动画蓝图中调用
 
 回去复习ue4基础，把ue整个框架结构进行复习
+
+
+
+### 网络同步
+
+客户端优先播放动画，服务器和模拟端进行同步
+
+我好奇charactermovement组件的网络同步是怎么同步的？客户端优先进行同步，服务端进行校正
+
+客户端预测，服务器

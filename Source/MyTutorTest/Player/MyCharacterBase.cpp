@@ -20,13 +20,6 @@ AMyCharacterBase::AMyCharacterBase()
 	LeftWeaponComp = CreateDefaultSubobject<UChildActorComponent>(TEXT("LeftWeaponComp"));
 	LeftWeaponComp->SetupAttachment(GetMesh(), FName("hand_lSocket"));
 
-	//设置组件插槽和位置
-	/*RightWeaponComp->SetRelativeLocation(FVector(-10.916758, 2.920606, -2.822717));
-	RightWeaponComp->SetRelativeRotation(FRotator(-0.000275, 0.000000, -89.999939));*/
-
-	LeftWeaponComp->SetRelativeLocation(FVector(15.611130, 1.656690, -1.495595));
-	LeftWeaponComp->SetRelativeRotation(FRotator(1.059581, -13.419556, 89.936722));
-
 	//初始化玩家生命值
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
