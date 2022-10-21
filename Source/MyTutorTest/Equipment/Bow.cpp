@@ -6,6 +6,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "../MyTutorTestCharacter.h"
+#include "../Projectile/ProjectileItem.h"
+
 
 ABow::ABow()
 {
@@ -55,7 +58,15 @@ void ABow::OnNormalBtn_Release()
 		bArrowLoaded = false;
 		bFiringArrow = true;
 		CanFire = false;
-		NetMult_LaunchProjectile();
+		
+		if (HasAuthority())
+		{
+			AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+			if (Tutor)
+			{
+				Tutor->ServerLaunchProjectile(ArrowClass);
+			}
+		}
 	}
 
 	SetControlView(false);
@@ -64,11 +75,6 @@ void ABow::OnNormalBtn_Release()
 void ABow::SetCanFire()
 {
 	CanFire = true;
-}
-
-void ABow::NetMult_LaunchProjectile_Implementation()
-{
-	
 }
 
 void ABow::ResetValue()

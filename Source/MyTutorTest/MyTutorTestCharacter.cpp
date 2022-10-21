@@ -23,6 +23,7 @@
 #include "Equipment/EquipObject.h"
 #include "Enemy/EnemyBase.h"
 #include "Engine/World.h"
+#include "Projectile/ProjectileItem.h"
 
 UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
 {
@@ -133,14 +134,14 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn Right / Left Mouse", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("Turn Right / Left Gamepad", this, &AMyTutorTestCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("Look Up / Down Mouse", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("Look Up / Down Gamepad", this, &AMyTutorTestCharacter::LookUpAtRate);
+// 	PlayerInputComponent->BindAxis("Turn Right / Left Mouse", this, &APawn::AddControllerYawInput);
+// 	PlayerInputComponent->BindAxis("Turn Right / Left Gamepad", this, &AMyTutorTestCharacter::TurnAtRate);
+// 	PlayerInputComponent->BindAxis("Look Up / Down Mouse", this, &APawn::AddControllerPitchInput);
+// 	PlayerInputComponent->BindAxis("Look Up / Down Gamepad", this, &AMyTutorTestCharacter::LookUpAtRate);
 
 	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMyTutorTestCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &AMyTutorTestCharacter::TouchStopped);
+// 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMyTutorTestCharacter::TouchStarted);
+// 	PlayerInputComponent->BindTouch(IE_Released, this, &AMyTutorTestCharacter::TouchStopped);
 
 	//AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds(""))
 }
@@ -613,6 +614,26 @@ void AMyTutorTestCharacter::NormalAttackBtn_Release()
 		if (EquipObject)
 		{
 			EquipObject->OnNormalBtn_Release();
+		}
+	}
+}
+
+void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnClass)
+{
+	//Try and fire a projectile
+	if (SpawnClass != nullptr)
+	{
+		UWorld* const World = GetWorld();
+		if (World != nullptr)
+		{
+			FRotator CameraRotation = FollowCamera->GetComponentRotation();
+			const FRotator SpawnRotation = FRotator(CameraRotation.Pitch + 10.f, CameraRotation.Yaw + 10.f, CameraRotation.Roll);
+			const FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(FVector(100.f, 0.f, 10.f));
+
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+			World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 		}
 	}
 }

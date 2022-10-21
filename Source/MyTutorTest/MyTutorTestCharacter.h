@@ -250,6 +250,13 @@ private:
 	EWeaponType CurrentWeaponType;
 #pragma endregion CombatSystem
 
+#pragma region SpawnActor
+public:
+	UFUNCTION(Server, Unreliable)
+	void ServerLaunchProjectile(UClass* SpawnClass);
+
+#pragma endregion SpawnActor
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerProperty", meta = (AllowPrivateAccess = "true"), ReplicatedUsing = OnRep_CurrentHealth)
 	FName CharacterName = "DarkLight";

@@ -28,9 +28,6 @@ private:
 	UFUNCTION()
 	void SetCanFire();
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void NetMult_LaunchProjectile();
-
 	void ResetValue();
 
 	void SetControlView(bool LockView);
@@ -51,6 +48,9 @@ private:
 	FTimerHandle DelayHandle;
 
 	//–Ó¡¶ ±º‰
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess, ClampMin = 0.1f), Category = "Debug")
 	float RateTime;
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), Category = "Arrow")
+	TSubclassOf<class AProjectileItem> ArrowClass;
 };
