@@ -24,6 +24,7 @@ enum class EAttackType : uint8
 UENUM(BlueprintType)
 enum class EWeaponType : uint8
 {
+	None,
 	Fists,
 	MainHand,
 	MainHandAndShied,
@@ -199,7 +200,7 @@ public:
 #pragma region CombatSystem
 public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "CombatSystem")
-	void Server_SwitchState();
+	void ServerSwitchState();
 
 	//武器类的子类class软引用
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CombatSystem")
@@ -207,10 +208,10 @@ public:
 
 	/** 切换武器 */
 	UFUNCTION(Server, Reliable)
-	void Server_SwitchWeapon(EWeaponType WeaponType = EWeaponType::MainHandAndShied);
+	void ServerSwitchWeapon(EWeaponType WeaponType = EWeaponType::MainHandAndShied);
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void NetMul_SwitchWeapon(EWeaponType WeaponType);
+	void NetMulSwitchWeapon(EWeaponType WeaponType);
 
 	/** 循环切换武器 */
 	void LoopSwitchWeapon();
@@ -222,7 +223,7 @@ public:
 
 	/** 同时通知服务器执行普通攻击 */
 	UFUNCTION(Server, Reliable)
-	void Server_AttackNotify(EAttackType AttackType);
+	void ServerAttackNotify(EAttackType AttackType);
 
 	UFUNCTION(Server, Reliable)
 	void Server_AttackBtn_Release(EAttackType AttackType);
@@ -254,6 +255,14 @@ private:
 public:
 	UFUNCTION(Server, Unreliable)
 	void ServerLaunchProjectile(UClass* SpawnClass);
+
+	/** 获得摄像机和箭的中间位置，从屏幕中间生成射线去检测 */
+	FVector GetCameraArrowLevel();
+
+	FVector CalcArrowVelocity(FVector EndLocation);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MultSetArrowVelocity(AProjectileItem* SpawnedArrow, FVector TossVelocity);
 
 #pragma endregion SpawnActor
 

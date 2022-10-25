@@ -61,7 +61,8 @@ void ABow::OnNormalBtn_Release()
 		
 		if (HasAuthority())
 		{
-			AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+			//这里踩了一个坑，如果是调用的UGamePlayStatics::GetPlayerCharacter()函数，在服务器上调用，会发现不是自己想要的角色
+			AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(GetOwner());
 			if (Tutor)
 			{
 				Tutor->ServerLaunchProjectile(ArrowClass);

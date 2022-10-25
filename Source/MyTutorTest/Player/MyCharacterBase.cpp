@@ -24,6 +24,9 @@ AMyCharacterBase::AMyCharacterBase()
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
+	//设置网格体碰撞预设，给武器伤害检测使用的自定义预设
+	GetMesh()->SetCollisionProfileName(TEXT("CustomCharacter"));
+
 }
 
 void AMyCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -110,8 +113,15 @@ float AMyCharacterBase::TakeDamage(float DamageTaken, struct FDamageEvent const&
 {
 	float damageApplied = CurrentHealth - DamageTaken;
 	SetCurrentHealth(damageApplied);
+
+	if (EventInstigator == nullptr)
+	{
+		EventInstigator = Cast<APawn>(DamageCauser) ? Cast<APawn>(DamageCauser)->GetController() : nullptr;
+	}
+	
 	if (GetController() && Cast<AMyPlayerController>(EventInstigator))
 	{
+		//跳字
 		Cast<AMyPlayerController>(EventInstigator)->ShowDamageNumber(DamageTaken, this);
 	}
 	return damageApplied;

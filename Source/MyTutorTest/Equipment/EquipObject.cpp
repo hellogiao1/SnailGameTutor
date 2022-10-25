@@ -67,15 +67,16 @@ void AEquipObject::PlayMontage_Internal(int32 Index)
 	{
 		if (AnimInstance && AttackMontages.IsValidIndex(Index) && !AnimInstance->Montage_IsPlaying(AttackMontages[Index]))
 		{
-			AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-			if (Tutor)
+			AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(GetOwner());
+			if (Tutor && Tutor->HasAuthority())
 			{
 				Tutor->NetMult_PlayMontage(AttackMontages[Index]);
 			}
-
-			//本地客户端执行
-			PlayMontageAsClient(AnimInstance);
-
+			else
+			{
+				//本地客户端执行
+				PlayMontageAsClient(AnimInstance);
+			}
 
 			MontageEndedDelegate.BindUObject(this, &AEquipObject::OnMontageEnded);
 			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[Index]);
@@ -175,7 +176,8 @@ void AEquipObject::ResetAttackMontValue()
 
 UAnimInstance* AEquipObject::GetAnimInst()
 {
-	USkeletalMeshComponent* Mesh = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0) ? UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)->GetMesh() : nullptr;
+	AMyTutorTestCharacter* OwnerChar = Cast<AMyTutorTestCharacter>(GetOwner());
+	USkeletalMeshComponent* Mesh = OwnerChar ? OwnerChar->GetMesh() : nullptr;
 	return Mesh ? Mesh->GetAnimInstance() : nullptr;
 }
 

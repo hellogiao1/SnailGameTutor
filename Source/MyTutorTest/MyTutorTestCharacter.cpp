@@ -24,6 +24,8 @@
 #include "Enemy/EnemyBase.h"
 #include "Engine/World.h"
 #include "Projectile/ProjectileItem.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+
 
 UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
 {
@@ -84,7 +86,7 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 
 	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
 
-	CurrentWeaponType = EWeaponType::MainHandAndShied;
+	CurrentWeaponType = EWeaponType::None;
 }
 
 void AMyTutorTestCharacter::SetRWeaponGeneOverlap(bool bInGeneraOverlap)
@@ -123,7 +125,7 @@ void AMyTutorTestCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 	PlayerInputComponent->BindAction("OpenQuest", IE_Pressed, this, &AMyTutorTestCharacter::OpenQuestUI);
 	PlayerInputComponent->BindAction("Interaction", IE_Pressed, this, &AMyTutorTestCharacter::OnInteractiveInput);
-	PlayerInputComponent->BindAction("SwitchFightState", IE_Pressed, this, &AMyTutorTestCharacter::Server_SwitchState);
+	PlayerInputComponent->BindAction("SwitchFightState", IE_Pressed, this, &AMyTutorTestCharacter::ServerSwitchState);
 	PlayerInputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &AMyTutorTestCharacter::LoopSwitchWeapon);
 	/*PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AMyTutorTestCharacter::NormalAttack);*/
 	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AMyTutorTestCharacter::AcceleRun);
@@ -187,16 +189,6 @@ void AMyTutorTestCharacter::BeginPlay()
 	for (TSubclassOf<UAttributeSet>& Set : AttributeSets)
 	{
 		AbilitySystem->InitStats(Set, AttrDataTable);
-	}
-
-	if (RightWeaponComp)
-	{
-		RightWeaponComp->SetHiddenInGame(!bFightState);
-	}
-
-	if (LeftWeaponComp)
-	{
-		LeftWeaponComp->SetHiddenInGame(!bFightState);
 	}
 }
 
@@ -389,25 +381,24 @@ void AMyTutorTestCharacter::NotifyQuestReachPos(FVector TargetPosition, bool bRe
 	}
 }
 
-void AMyTutorTestCharacter::Server_SwitchState_Implementation()
+void AMyTutorTestCharacter::ServerSwitchState_Implementation()
 {
 	bFightState = !bFightState;
-	
-	if (RightWeaponComp && RightWeaponComp->GetChildActor() == false)
+	if (CurrentWeaponType == EWeaponType::None)
 	{
-		Server_SwitchWeapon(EWeaponType::MainHandAndShied);
+		ServerSwitchWeapon(EWeaponType::MainHandAndShied);
 	}
 }
 
-void AMyTutorTestCharacter::Server_SwitchWeapon_Implementation(EWeaponType WeaponType)
+void AMyTutorTestCharacter::ServerSwitchWeapon_Implementation(EWeaponType WeaponType)
 {
 	if (bFightState)
 	{
-		NetMul_SwitchWeapon(WeaponType);
+		NetMulSwitchWeapon(WeaponType);
 	}
 }
 
-void AMyTutorTestCharacter::NetMul_SwitchWeapon_Implementation(EWeaponType WeaponType)
+void AMyTutorTestCharacter::NetMulSwitchWeapon_Implementation(EWeaponType WeaponType)
 {
 	if (Map_WeaponClassPaths.Num())
 	{
@@ -438,6 +429,7 @@ void AMyTutorTestCharacter::NetMul_SwitchWeapon_Implementation(EWeaponType Weapo
 				{
 					RightWeaponComp->GetChildActor()->SetOwner(this);
 				}
+
 			}
 		}
 		break;
@@ -466,6 +458,8 @@ void AMyTutorTestCharacter::NetMul_SwitchWeapon_Implementation(EWeaponType Weapo
 		default:
 			break;
 		}
+
+		CurrentWeaponType = WeaponType;
 		
 	}
 	else
@@ -487,7 +481,7 @@ void AMyTutorTestCharacter::LoopSwitchWeapon()
 		{
 			CurrentWeaponType = EWeaponType::MainHandAndShied;
 		}
-		Server_SwitchWeapon(CurrentWeaponType);
+		ServerSwitchWeapon(CurrentWeaponType);
 	}
 }
 
@@ -504,10 +498,10 @@ void AMyTutorTestCharacter::AttackBtn_Down(EAttackType AttackType)
 		break;
 	}
 
-	Server_AttackNotify(AttackType);
+	ServerAttackNotify(AttackType);
 }
 
-void AMyTutorTestCharacter::Server_AttackNotify_Implementation(EAttackType AttackType)
+void AMyTutorTestCharacter::ServerAttackNotify_Implementation(EAttackType AttackType)
 {
 	switch (AttackType)
 	{
@@ -626,15 +620,59 @@ void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnC
 		UWorld* const World = GetWorld();
 		if (World != nullptr)
 		{
+			//生成箭的位置和旋转：在弓箭前方生成，避免和角色以及弓箭误碰
 			FRotator CameraRotation = FollowCamera->GetComponentRotation();
-			const FRotator SpawnRotation = FRotator(CameraRotation.Pitch + 10.f, CameraRotation.Yaw + 10.f, CameraRotation.Roll);
-			const FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(FVector(100.f, 0.f, 10.f));
+			const FRotator SpawnRotation = CameraRotation;
+			const FVector SpawnLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50;
 
 			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			if (SpawnedArrow)
+			{
+				SpawnedArrow->SetOwner(this);
+			}
+
+			FHitResult OutHit;
+			TArray<FVector> OutPathPositions;
+			FVector OutLastTraceDestination;
+			FVector StartPos = GetCameraArrowLevel();
+			float Speed = 6000.f;
+			FVector LaunchVelocity = GetControlRotation().Vector() * Speed;
+			//预测箭的抛物线，获得最终到达的点位置，其中ECC_GameTraceChannel1对应的是项目设置的DamageTraceHit射线通道
+			bool bHit = UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), OutHit, OutPathPositions, OutLastTraceDestination,
+				StartPos, LaunchVelocity, true, 3.f, ECollisionChannel::ECC_GameTraceChannel2, 
+				false, {}, EDrawDebugTrace::ForDuration, 1.f, 15.f, 6.f, 0.f);
+
+			FVector ArrowEndLocation = bHit ? OutHit.ImpactPoint : OutLastTraceDestination;
+			FVector ArrowVelocity = CalcArrowVelocity(ArrowEndLocation);
+			MultSetArrowVelocity(SpawnedArrow, ArrowVelocity);
 		}
+	}
+}
+
+FVector AMyTutorTestCharacter::GetCameraArrowLevel()
+{
+	float ForwardLength = (LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50.f - FollowCamera->GetComponentLocation()).Size();
+	FVector ForwardVector = GetControlRotation().Vector() * ForwardLength;
+	return ForwardVector + FollowCamera->GetComponentLocation();
+}
+
+FVector AMyTutorTestCharacter::CalcArrowVelocity(FVector EndLocation)
+{
+	FVector TossVelocity;
+	FVector StartLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50.f;
+	float Speed = 6000.f;
+	UGameplayStatics::BlueprintSuggestProjectileVelocity(GetWorld(), TossVelocity, StartLocation, EndLocation, Speed, 0.f, ESuggestProjVelocityTraceOption::DoNotTrace, 0.f, false, false);
+	return TossVelocity;
+}
+
+void AMyTutorTestCharacter::MultSetArrowVelocity_Implementation(AProjectileItem* SpawnedArrow, FVector TossVelocity)
+{
+	if (SpawnedArrow && SpawnedArrow->ProjectileMove)
+	{
+		SpawnedArrow->ProjectileMove->Velocity = TossVelocity;
 	}
 }
 
