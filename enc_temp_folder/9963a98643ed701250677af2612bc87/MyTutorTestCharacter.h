@@ -259,8 +259,6 @@ private:
 	void NormalAttackBtn_Release();
 
 	EWeaponType CurrentWeaponType;
-	UPROPERTY()
-	AEquipObject* LeftEquipObject;
 #pragma endregion CombatSystem
 
 #pragma region SpawnActor

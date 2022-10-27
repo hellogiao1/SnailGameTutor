@@ -19,22 +19,16 @@ ABow::ABow()
 	CanFire = false;
 
 	RateTime = 2.f;
-
-	//角色旋转
-	bMoveView = false;
-	TurnSpeed = -5.f;
 }
 
 void ABow::Excute_NormalAttack()
 {
-	if (bBowAiming)
-	{
-		//避免释放动画还没播放完就可以蓄力拉弹弓
-		return;
-	}
-
 	StartMousePos = UWidgetLayoutLibrary::GetMousePositionOnViewport(GetWorld());
-	bMoveView = true;
+	CanMove = true;
+	/*if (bBowAiming)
+	{
+		return;
+	}*/
 
 	//锁定视角
 	SetControlView(true);
@@ -77,14 +71,10 @@ void ABow::OnNormalBtn_Release()
 				Tutor->ServerLaunchProjectile(ArrowClass);
 			}
 		}
-
-		//加一个定时器等射箭动作完成后进行初始化
-		FTimerHandle RestTimeHandle;
-		GetWorld()->GetTimerManager().SetTimer(RestTimeHandle, [&]() { bBowAiming = false; }, 0.6f, false);
 	}
 
 	SetControlView(false);
-	bMoveView = false;
+	CanMove = false;
 }
 
 void ABow::SetCanFire()
@@ -124,7 +114,7 @@ void ABow::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bMoveView)
+	if (CanMove)
 	{
 		AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(GetOwner());
 		if (Tutor && Tutor->GetLocalRole() == ROLE_AutonomousProxy)

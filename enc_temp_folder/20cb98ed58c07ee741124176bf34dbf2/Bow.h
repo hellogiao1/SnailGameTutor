@@ -58,8 +58,8 @@ private:
 
 	FVector2D StartMousePos;
 
-	bool bMoveView;
+	bool CanMove = false;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess), Category = "Debug")
-	float TurnSpeed;
+	float TurnSpeed = -5.f;
 };

@@ -166,8 +166,6 @@ void AMyTutorTestCharacter::OnTouchMoved(ETouchIndex::Type FingerIndex, FVector 
 	const FVector DeltaLocation = TouchStartPos - Location;
 	AddControllerPitchInput(DeltaLocation.Y * TurnSpeed * GetWorld()->GetDeltaSeconds());
 	AddControllerYawInput(DeltaLocation.X * TurnSpeed * GetWorld()->GetDeltaSeconds());
-
-	TouchStartPos = Location;
 }
 
 void AMyTutorTestCharacter::BeginPlay()
@@ -580,13 +578,14 @@ bool AMyTutorTestCharacter::SetRWeaponFinishFrame(bool bFishFrame)
 
 AEquipObject* AMyTutorTestCharacter::GetRightWeaponInst()
 {
-	return RightWeaponComp ? Cast<AEquipObject>(RightWeaponComp->GetChildActor()) : nullptr;
+	AEquipObject* EquipObject = RightWeaponComp ? Cast<AEquipObject>(RightWeaponComp->GetChildActor()) : nullptr;
+	return EquipObject;
 }
 
 AEquipObject* AMyTutorTestCharacter::GetLeftWeaponInst()
 {
-	LeftEquipObject = LeftWeaponComp ? Cast<AEquipObject>(LeftWeaponComp->GetChildActor()) : nullptr;
-	return LeftEquipObject;
+	AEquipObject* EquipObject = LeftWeaponComp ? Cast<AEquipObject>(LeftWeaponComp->GetChildActor()) : nullptr;
+	return EquipObject;
 }
 
 EWeaponType AMyTutorTestCharacter::GetCurrentWeaponOutput()
