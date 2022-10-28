@@ -113,6 +113,14 @@ AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontages[CurrPl
 
 观察动画蓝图进行相关动画知识使用
 
+
+
+
+
+1.新建另一种爆炸抛射物，击中目标，需要释放爆炸特效，没有击中目标，生命周期结束了也要爆炸销毁。
+2.爆炸是范围伤害
+3.再新建一种抛射物，子母抛射物，弓箭射出去以后，需要在销毁的同时，向四个方向生成子抛射物，子抛射物可以任意配置
+
 -----
 
 

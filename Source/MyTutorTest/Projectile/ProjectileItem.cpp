@@ -29,12 +29,16 @@ AProjectileItem::AProjectileItem()
 
 	ProjectileMove = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMove->SetUpdatedComponent(CollisionComp);
-	ProjectileMove->InitialSpeed = 3000.f;
-	ProjectileMove->MaxSpeed = 3000.f;
+	ProjectileMove->InitialSpeed = 0.f;
+	ProjectileMove->MaxSpeed = 0.f;
+	ProjectileMove->ProjectileGravityScale = 0.5;
 	ProjectileMove->bRotationFollowsVelocity = true;
-	ProjectileMove->bShouldBounce = true;
+	ProjectileMove->bShouldBounce = false;
 
 	bReplicates = true;
+
+	DestroyTime = 5.0f;
+	ProjectileDamage = 20.f;
 }
 
 // Called when the game starts or when spawned
@@ -42,24 +46,67 @@ void AProjectileItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
+	{
+		World->GetTimerManager().SetTimer(DestroyTimeHandle, this, &AProjectileItem::OnActorDestroyed, DestroyTime, false);
+	}
 	
 }
 
 void AProjectileItem::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-
-		Destroy();
+		World->GetTimerManager().ClearTimer(DestroyTimeHandle);
 	}
+	TriggerHit();
 }
 
 void AProjectileItem::OnHitOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
+}
+
+void AProjectileItem::TriggerHit()
+{
+
+}
+
+void AProjectileItem::OnActorDestroyed()
+{
+	Destroy();
+}
+
+bool AProjectileItem::IsTeam(AActor* OtherActor)
+{
+	AActor* MyInstigator = GetOwner();
+	if (MyInstigator && OtherActor)
+	{
+		for (const auto& Name : MyInstigator->Tags)
+		{
+			if (OtherActor->Tags.Contains(Name))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+float AProjectileItem::ApplyDamage(AActor* HitActor, float DamageAmount)
+{
+	if (HitActor && (DamageAmount != 0.f))
+	{
+		// make sure we have a good damage type
+		TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+		FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+		return HitActor->TakeDamage(DamageAmount, DamageEvent, nullptr, GetOwner());
+	}
+
+	return 0.f;
 }
 
 // Called every frame

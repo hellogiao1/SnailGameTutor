@@ -36,6 +36,27 @@ protected:
 	UFUNCTION()
 	virtual void OnHitOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	virtual void TriggerHit();
+
+	UFUNCTION()
+	virtual void OnActorDestroyed();
+
+	virtual bool IsTeam(AActor* OtherActor);
+
+	virtual float ApplyDamage(AActor* HitActor, float DamageAmount);
+
+protected:
+	FTimerHandle DestroyTimeHandle;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile|Life", meta = (ClampMin = 0.f))
+	float DestroyTime;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile|UI")
+	TSubclassOf<UUserWidget> HitMarkerClass;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile|Property", meta = (ClampMin = 0.f))
+	float ProjectileDamage;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

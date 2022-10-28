@@ -12,39 +12,22 @@
 AArrow::AArrow()
 {
 	DestroyTime = 5.f;
-	ArrowDamage = 20.f;
 }
 
 void AArrow::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UWorld* const World = GetWorld();
-	if (World != nullptr)
-	{
-		World->GetTimerManager().SetTimer(DestroyTimeHandle, this, &AArrow::K2_DestroyActor, DestroyTime, false);
-	}
-}
-
-void AArrow::OnHitOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	
-}
-
-void AArrow::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-	UWorld* const World = GetWorld();
-	if (World != nullptr)
-	{
-		World->GetTimerManager().ClearTimer(DestroyTimeHandle);
-		World->GetTimerManager().SetTimer(DestroyTimeHandle, this, &AArrow::K2_DestroyActor, DestroyTime, false);
-	}
-
-	TriggerHit();
 }
 
 void AArrow::TriggerHit()
 {
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
+	{
+		World->GetTimerManager().SetTimer(DestroyTimeHandle, this, &AArrow::OnActorDestroyed, DestroyTime, false);
+	}
+
 	FVector StartLoc = GetActorLocation();
 	FVector EndLoc = StartLoc + GetActorForwardVector() * 40.f;
 	FHitResult OutHit;
@@ -71,7 +54,7 @@ void AArrow::TriggerHit()
 				AActor* HitActor = OutHit.GetHitObjectHandle().FetchActor();
 				if (IsTeam(HitActor) == false)
 				{
-					ApplyDamage(HitActor);
+					ApplyDamage(HitActor, ProjectileDamage);
 				}
 			}
 		}
@@ -150,36 +133,5 @@ void AArrow::CalculateDamage(const FName& HitBoneName)
 	}
 
 	//Set Damage
-	ArrowDamage *= DamageMultiplier;
-}
-
-bool AArrow::IsTeam(AActor* OtherActor)
-{
-	AActor* MyInstigator = GetOwner();
-	if (MyInstigator && OtherActor)
-	{
-		for (const auto& Name : MyInstigator->Tags)
-		{
-			if (OtherActor->Tags.Contains(Name))
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-float AArrow::ApplyDamage(AActor* HitActor)
-{
-
-	if (HitActor && (ArrowDamage != 0.f))
-	{
-		// make sure we have a good damage type
-		TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-		FDamageEvent DamageEvent(ValidDamageTypeClass);
-
-		return HitActor->TakeDamage(ArrowDamage, DamageEvent, nullptr, GetOwner());
-	}
-
-	return 0.f;
+	ProjectileDamage *= DamageMultiplier;
 }
