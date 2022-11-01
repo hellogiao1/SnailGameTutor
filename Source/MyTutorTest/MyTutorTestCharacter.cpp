@@ -292,7 +292,7 @@ void AMyTutorTestCharacter::OnHealthUpdate()
 	{
 		OnCharcterDied();
 	}
-	
+
 }
 
 void AMyTutorTestCharacter::OnCharcterDied()
@@ -482,7 +482,7 @@ void AMyTutorTestCharacter::NetMulSwitchWeapon_Implementation(EWeaponType Weapon
 		}
 
 		CurrentWeaponType = WeaponType;
-		
+
 	}
 	else
 	{
@@ -689,12 +689,12 @@ void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnC
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			//AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			AProjectileItem* SpawnedArrow = World->SpawnActorDeferred<AProjectileItem>(SpawnClass, FTransform(SpawnRotation, SpawnLocation), this);
-			/*	if (SpawnedArrow)
-				{
-					SpawnedArrow->SetOwner(this);
-				}*/
+			AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			//AProjectileItem* SpawnedArrow = World->SpawnActorDeferred<AProjectileItem>(SpawnClass, FTransform(SpawnRotation, SpawnLocation), this);
+			if (SpawnedArrow)
+			{
+				SpawnedArrow->SetOwner(this);
+			}
 
 			FHitResult OutHit;
 			TArray<FVector> OutPathPositions;
@@ -712,8 +712,8 @@ void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnC
 			FVector ArrowVelocity = CalcArrowVelocity(ArrowStartLocation, ArrowEndLocation, Speed);
 			if (SpawnedArrow && SpawnedArrow->ProjectileMove)
 			{
-				SpawnedArrow->ProjectileMove->Velocity = ArrowVelocity;
-				//SpawnedArrow->SetVelocity(ArrowVelocity);
+				//SpawnedArrow->ProjectileMove->Velocity = ArrowVelocity;
+				SpawnedArrow->SetVelocity(ArrowVelocity);
 			}
 			//这里有问题：当你创建一个新的Actor的同时（比如在一个函数内），你将这个Actor作为RPC的参数传到客户端去执行，这时候你会发现客户端的RPC函数的参数为NULL
 			//因为RPC函数先执行，同步后执行

@@ -19,7 +19,7 @@ void AExplosiveAndSpawnChild::OnActorDestroyed()
 	{
 		if (Tutor)
 		{
-			FRotator spawnRotation = FRotator(GetActorRotation().Pitch + 180.f, GetActorRotation().Yaw + It.OffsetYaw, GetActorRotation().Roll + It.OffsetRoll);
+			FRotator spawnRotation = FRotator(GetActorRotation().Pitch + 180.f, GetActorRotation().Pitch + 180.f + It.OffsetYaw, GetActorRotation().Pitch + 180.f + It.OffsetRoll);
 			Tutor->ServerLaunchProjectile(It.ProjectileChild, spawnRotation, GetActorLocation());
 		}
 	}
