@@ -8,6 +8,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "../Functionality/MyGameplayStatic.h"
 
 AArrow::AArrow()
 {
@@ -20,7 +21,7 @@ void AArrow::BeginPlay()
 
 }
 
-void AArrow::TriggerHit()
+void AArrow::TriggerHit(const FHitResult& OutHit)
 {
 	UWorld* const World = GetWorld();
 	if (World != nullptr)
@@ -28,86 +29,19 @@ void AArrow::TriggerHit()
 		World->GetTimerManager().SetTimer(DestroyTimeHandle, this, &AArrow::OnActorDestroyed, DestroyTime, false);
 	}
 
-	FVector StartLoc = GetActorLocation();
-	FVector EndLoc = StartLoc + GetActorForwardVector() * 40.f;
-	FHitResult OutHit;
-
-	//自己添加的ObjectChannel对应着的 ETraceTypeQuery 是从数字7开始的
-	bool bHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLoc, EndLoc, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel2), false, {}, EDrawDebugTrace::None, OutHit, true);
-	if (bHit)
+	if (OutHit.BoneName != TEXT("None"))
 	{
-		if (OutHit.BoneName == TEXT("None"))
+		if (HasAuthority())
 		{
-			/*if (IsArrowStuckInWall(OutHit.ImpactNormal))
+			CalculateDamage(OutHit.BoneName);
+			AActor* HitActor = OutHit.GetHitObjectHandle().FetchActor();
+			if (UMyGameplayStatic::IsTeam(this, HitActor) == false)
 			{
-				
-			}*/
-			RemoveCollisionAttach(OutHit.GetComponent());
-		}
-		else
-		{
-			AttachtoEnemyHit(OutHit.GetComponent(), OutHit.BoneName);
-			
-			if (HasAuthority())
-			{
-				CalculateDamage(OutHit.BoneName);
-				AActor* HitActor = OutHit.GetHitObjectHandle().FetchActor();
-				if (IsTeam(HitActor) == false)
-				{
-					ApplyDamage(HitActor, ProjectileDamage);
-				}
+				ApplyDamage(HitActor, ProjectileDamage);
 			}
 		}
 	}
 	
-}
-
-bool AArrow::IsArrowStuckInWall(const FVector& ImpactNormal)
-{
-	float DP = FVector::DotProduct(ImpactNormal, GetActorForwardVector());
-	float AngleWall = (180.0) / DOUBLE_PI * FMath::Acos(DP) - 90.f;
-	if (AngleWall >= 8.f)
-	{
-		if (ProjectileMove)
-		{
-			ProjectileMove->StopMovementImmediately();
-		}
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-void AArrow::RemoveCollisionAttach(USceneComponent* Parent)
-{
-	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	StaticMesh->AttachToComponent(Parent, FAttachmentTransformRules::KeepWorldTransform);
-}
-
-void AArrow::AttachtoEnemyHit(USceneComponent* Parent, const FName& SocketName)
-{
-	if (ProjectileMove)
-	{
-		ProjectileMove->StopMovementImmediately();
-	}
-
-	StaticMesh->AttachToComponent(Parent, FAttachmentTransformRules::KeepWorldTransform, SocketName);
-
-	//生成HitMarker动画
-	AMyTutorTestCharacter* CurrChar = Cast<AMyTutorTestCharacter>(GetOwner());
-	if (CurrChar && CurrChar->GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		if (HitMarkerClass != nullptr)
-		{
-			UUserWidget* HitMarker = CreateWidget<UUserWidget>(GetWorld(), HitMarkerClass);
-			if (HitMarker)
-			{
-				HitMarker->AddToViewport();
-			}
-		}
-	}
 }
 
 void AArrow::CalculateDamage(const FName& HitBoneName)

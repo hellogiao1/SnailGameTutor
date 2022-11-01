@@ -18,9 +18,13 @@ public:
 	AExplosive();
 
 protected:
-	virtual void TriggerHit() override;
+	virtual void TriggerHit(const FHitResult& OutHit) override;
 
 	virtual void OnActorDestroyed() override;
+
+private:
+	UFUNCTION(NetMulticast, Unreliable)
+	void MultSpawnEffect();
 
 private:
 	UPROPERTY(EditAnywhere, Category="Projectile|Show", meta = (AllowPrivateAccess))

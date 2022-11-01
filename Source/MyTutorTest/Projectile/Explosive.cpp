@@ -4,13 +4,14 @@
 #include "Explosive.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "../Functionality/MyGameplayStatic.h"
 
 AExplosive::AExplosive()
 {
 	SphereRadius = 100.f;
 }
 
-void AExplosive::TriggerHit()
+void AExplosive::TriggerHit(const FHitResult& OutHit)
 {
 	OnActorDestroyed();
 }
@@ -24,14 +25,27 @@ void AExplosive::OnActorDestroyed()
 
 		for (AActor* It : OutActors)
 		{
-			It->TakeDamage(ProjectileDamage, FDamageEvent(), nullptr, GetOwner());
+			if (UMyGameplayStatic::IsTeam(GetOwner(), It) == false)
+			{
+				It->TakeDamage(ProjectileDamage, FDamageEvent(), nullptr, GetOwner());
+			}
 		}
 	}
+	
+	MultSpawnEffect();
 
-	if (ExplosiveEffect)
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
+	{
+		FTimerHandle TimerHandle;
+		World->GetTimerManager().SetTimer(TimerHandle, this, &AProjectileItem::K2_DestroyActor, 0.2f, false);
+	}
+}
+
+void AExplosive::MultSpawnEffect_Implementation()
+{
+	if (!HasAuthority() && ExplosiveEffect)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosiveEffect, GetActorLocation(), FRotator::ZeroRotator, FVector(int32(SphereRadius) / 100));
 	}
-
-	Destroy();
 }

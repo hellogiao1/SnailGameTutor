@@ -74,7 +74,7 @@ void ABow::OnNormalBtn_Release()
 			AMyTutorTestCharacter* Tutor = Cast<AMyTutorTestCharacter>(GetOwner());
 			if (Tutor)
 			{
-				Tutor->ServerLaunchProjectile(ArrowClass);
+				Tutor->BowLaunchProjectile(ArrowClass);
 			}
 		}
 

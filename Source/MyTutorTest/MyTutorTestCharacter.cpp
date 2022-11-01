@@ -633,7 +633,48 @@ void AMyTutorTestCharacter::NormalAttackBtn_Release()
 	}
 }
 
-void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnClass)
+//void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnClass)
+//{
+//	//Try and fire a projectile
+//	if (SpawnClass != nullptr)
+//	{
+//		UWorld* const World = GetWorld();
+//		if (World != nullptr)
+//		{
+//			//生成箭的位置和旋转：在弓箭前方生成，避免和角色以及弓箭误碰
+//			FRotator CameraRotation = FollowCamera->GetComponentRotation();
+//			const FRotator SpawnRotation = CameraRotation;
+//			const FVector SpawnLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50;
+//
+//			FActorSpawnParameters ActorSpawnParams;
+//			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+//
+//			AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+//			if (SpawnedArrow)
+//			{
+//				SpawnedArrow->SetOwner(this);
+//			}
+//
+//			FHitResult OutHit;
+//			TArray<FVector> OutPathPositions;
+//			FVector OutLastTraceDestination;
+//			FVector StartPos = GetCameraArrowLevel();
+//			float Speed = 6000.f;
+//			FVector LaunchVelocity = GetControlRotation().Vector() * Speed;
+//			//预测箭的抛物线，获得最终到达的点位置，其中ECC_GameTraceChannel1对应的是项目设置的DamageTraceHit射线通道
+//			bool bHit = UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), OutHit, OutPathPositions, OutLastTraceDestination,
+//				StartPos, LaunchVelocity, true, 3.f, ECollisionChannel::ECC_GameTraceChannel2, 
+//				false, {}, EDrawDebugTrace::ForDuration, 1.f, 15.f, 6.f, 0.f);
+//
+//			FVector ArrowEndLocation = bHit ? OutHit.ImpactPoint : OutLastTraceDestination;
+//			FVector ArrowStartLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50.f;
+//			FVector ArrowVelocity = CalcArrowVelocity(ArrowStartLocation, ArrowEndLocation);
+//			MultSetArrowVelocity(SpawnedArrow, ArrowVelocity);
+//		}
+//	}
+//}
+
+void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnClass, FRotator Rotation, FVector Location, bool bAimView /*= false*/)
 {
 	//Try and fire a projectile
 	if (SpawnClass != nullptr)
@@ -642,35 +683,51 @@ void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnC
 		if (World != nullptr)
 		{
 			//生成箭的位置和旋转：在弓箭前方生成，避免和角色以及弓箭误碰
-			FRotator CameraRotation = FollowCamera->GetComponentRotation();
-			const FRotator SpawnRotation = CameraRotation;
-			const FVector SpawnLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50;
+			const FRotator SpawnRotation = Rotation;
+			const FVector SpawnLocation = Location;
 
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			if (SpawnedArrow)
-			{
-				SpawnedArrow->SetOwner(this);
-			}
+			//AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			AProjectileItem* SpawnedArrow = World->SpawnActorDeferred<AProjectileItem>(SpawnClass, FTransform(SpawnRotation, SpawnLocation), this);
+			/*	if (SpawnedArrow)
+				{
+					SpawnedArrow->SetOwner(this);
+				}*/
 
 			FHitResult OutHit;
 			TArray<FVector> OutPathPositions;
 			FVector OutLastTraceDestination;
-			FVector StartPos = GetCameraArrowLevel();
-			float Speed = 6000.f;
-			FVector LaunchVelocity = GetControlRotation().Vector() * Speed;
+			FVector StartPos = bAimView == false ? Location : GetCameraArrowLevel();
+			float Speed = 1000.f;
+			FVector LaunchVelocity = Rotation.Vector() * Speed;
 			//预测箭的抛物线，获得最终到达的点位置，其中ECC_GameTraceChannel1对应的是项目设置的DamageTraceHit射线通道
 			bool bHit = UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), OutHit, OutPathPositions, OutLastTraceDestination,
-				StartPos, LaunchVelocity, true, 3.f, ECollisionChannel::ECC_GameTraceChannel2, 
-				false, {}, EDrawDebugTrace::ForDuration, 1.f, 15.f, 6.f, 0.f);
+				StartPos, LaunchVelocity, true, 3.f, ECollisionChannel::ECC_GameTraceChannel2,
+				false, {}, EDrawDebugTrace::None, 1.f, 15.f, 6.f, 0.f);
 
 			FVector ArrowEndLocation = bHit ? OutHit.ImpactPoint : OutLastTraceDestination;
-			FVector ArrowVelocity = CalcArrowVelocity(ArrowEndLocation);
-			MultSetArrowVelocity(SpawnedArrow, ArrowVelocity);
+			FVector ArrowStartLocation = SpawnLocation;
+			FVector ArrowVelocity = CalcArrowVelocity(ArrowStartLocation, ArrowEndLocation, Speed);
+			if (SpawnedArrow && SpawnedArrow->ProjectileMove)
+			{
+				SpawnedArrow->ProjectileMove->Velocity = ArrowVelocity;
+				//SpawnedArrow->SetVelocity(ArrowVelocity);
+			}
+			//这里有问题：当你创建一个新的Actor的同时（比如在一个函数内），你将这个Actor作为RPC的参数传到客户端去执行，这时候你会发现客户端的RPC函数的参数为NULL
+			//因为RPC函数先执行，同步后执行
+			//MultSetArrowVelocity(SpawnedArrow, ArrowVelocity);
 		}
 	}
+}
+
+void AMyTutorTestCharacter::BowLaunchProjectile(UClass* SpawnClass)
+{
+	const FRotator SpawnRotation = FollowCamera->GetComponentRotation();
+	const FVector SpawnLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50;
+
+	ServerLaunchProjectile(SpawnClass, SpawnRotation, SpawnLocation, true);
 }
 
 FVector AMyTutorTestCharacter::GetCameraArrowLevel()
@@ -680,11 +737,9 @@ FVector AMyTutorTestCharacter::GetCameraArrowLevel()
 	return ForwardVector + FollowCamera->GetComponentLocation();
 }
 
-FVector AMyTutorTestCharacter::CalcArrowVelocity(FVector EndLocation)
+FVector AMyTutorTestCharacter::CalcArrowVelocity(FVector StartLocation, FVector EndLocation, float Speed)
 {
 	FVector TossVelocity;
-	FVector StartLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50.f;
-	float Speed = 6000.f;
 	UGameplayStatics::BlueprintSuggestProjectileVelocity(GetWorld(), TossVelocity, StartLocation, EndLocation, Speed, 0.f, ESuggestProjVelocityTraceOption::DoNotTrace, 0.f, false, false);
 	return TossVelocity;
 }

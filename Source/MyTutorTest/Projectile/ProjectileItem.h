@@ -17,6 +17,8 @@ public:
 	// Sets default values for this actor's properties
 	AProjectileItem();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UProjectileMovementComponent* ProjectileMove;
 
@@ -30,20 +32,29 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
-	UFUNCTION()
-	virtual void OnHitOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	virtual void TriggerHit();
+	virtual void TriggerHit(const FHitResult& OutHit);
 
 	UFUNCTION()
 	virtual void OnActorDestroyed();
 
-	virtual bool IsTeam(AActor* OtherActor);
-
 	virtual float ApplyDamage(AActor* HitActor, float DamageAmount);
+
+	void TraceObject();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MultStopMovement();
+
+private:
+	bool IsArrowStuckInWall(const FVector& ImpactNormal);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void RemoveCollisionAttach(USceneComponent* Parent);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void AttachtoEnemyHit(USceneComponent* Parent, const FName& SocketName);
+
+	UFUNCTION()
+	void OnRep_ProjectileVelocity();
 
 protected:
 	FTimerHandle DestroyTimeHandle;
@@ -61,4 +72,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void SetVelocity(FVector NewVelocity);
+
+private:
+	bool bHitActor = false;
+
+	UPROPERTY(ReplicatedUsing = "OnRep_ProjectileVelocity")
+	FVector ProjectileVelocity;
 };

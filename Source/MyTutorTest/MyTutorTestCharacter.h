@@ -265,13 +265,15 @@ private:
 
 #pragma region SpawnActor
 public:
+	void BowLaunchProjectile(UClass* SpawnClass);
+
 	UFUNCTION(Server, Unreliable)
-	void ServerLaunchProjectile(UClass* SpawnClass);
+	void ServerLaunchProjectile(UClass* SpawnClass, FRotator Rotation, FVector Location, bool bAimView = false);
 
 	/** 获得摄像机和箭的中间位置，从屏幕中间生成射线去检测 */
 	FVector GetCameraArrowLevel();
 
-	FVector CalcArrowVelocity(FVector EndLocation);
+	FVector CalcArrowVelocity(FVector StartLocation, FVector EndLocation, float Speed);
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void MultSetArrowVelocity(AProjectileItem* SpawnedArrow, FVector TossVelocity);

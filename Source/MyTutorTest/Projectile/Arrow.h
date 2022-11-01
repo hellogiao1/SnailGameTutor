@@ -20,15 +20,9 @@ public:
 	virtual void BeginPlay() override;
 
 protected:
-	virtual void TriggerHit() override;
+	virtual void TriggerHit(const FHitResult& OutHit) override;
 
 private:
-	bool IsArrowStuckInWall(const FVector& ImpactNormal);
-
-	void RemoveCollisionAttach(USceneComponent* Parent);
-
-	void AttachtoEnemyHit(USceneComponent* Parent, const FName& SocketName);
-
 	void CalculateDamage(const FName& HitBoneName);
 
 private:
