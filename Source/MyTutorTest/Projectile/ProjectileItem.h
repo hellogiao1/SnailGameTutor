@@ -77,6 +77,12 @@ public:
 private:
 	bool bHitActor = false;
 
+	bool bReachMaxPoint = false;
+
+	FRotator RequireRotation;
+
 	UPROPERTY(ReplicatedUsing = "OnRep_ProjectileVelocity")
 	FVector ProjectileVelocity;
+public:
+	void Init(bool bMaxPath, FRotator EndRotation);
 };

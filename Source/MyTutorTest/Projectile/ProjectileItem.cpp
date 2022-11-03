@@ -81,13 +81,18 @@ void AProjectileItem::Tick(float DeltaTime)
 	{
 		TraceObject();
 	}
-
 }
 
 void AProjectileItem::SetVelocity(FVector NewVelocity)
 {
 	ProjectileVelocity = NewVelocity;
 	OnRep_ProjectileVelocity();
+}
+
+void AProjectileItem::Init(bool bMaxPath, FRotator EndRotation)
+{
+	bReachMaxPoint = bMaxPath;
+	RequireRotation = EndRotation;
 }
 
 void AProjectileItem::TraceObject()
@@ -97,7 +102,7 @@ void AProjectileItem::TraceObject()
 	FHitResult OutHit;
 
 	//自己添加的ObjectChannel对应着的 ETraceTypeQuery 是从数字7开始的
-	bool bHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLoc, EndLoc, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel2), false, {}, EDrawDebugTrace::None, OutHit, true);
+	bool bHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLoc, EndLoc, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel2), false, {GetOwner()}, EDrawDebugTrace::None, OutHit, true);
 	if (bHit)
 	{
 		if (UMyGameplayStatic::IsTeam(GetOwner(), OutHit.GetActor()))
@@ -127,6 +132,18 @@ void AProjectileItem::TraceObject()
 		TriggerHit(OutHit);
 
 		bHitActor = true;
+	}
+	else
+	{
+		//达到最远的点，则旋转抛射物为瞄准的方向
+		if (bReachMaxPoint)
+		{
+			if (ProjectileMove)
+			{
+				ProjectileMove->ProjectileGravityScale = 0.3;
+				ProjectileMove->Velocity = RequireRotation.Vector() * ProjectileMove->Velocity.Size();
+			}
+		}
 	}
 }
 

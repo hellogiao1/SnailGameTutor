@@ -13,3 +13,6 @@ Error		'ServerLaunchProjectile' conflicts with 'Function /Script/MyTutorTest.MyT
 后面用蓝图调试复现，才发现是没有把Velocity同步到客户端，我是广播的方式去调用修改函数的，这里有个问题是服务器ActorA在创建一个新的ActorB的函数里同时执行自身的一个Client的RPC函数，RPC函数先执行，
 而我的抛射物是通过同步的方式复制过去的， 当你创建一个新的Actor的同时（比如在一个函数内），你将这个Actor作为RPC的参数传到客户端去执行，这时候你会发现客户端的RPC函数的参数为NULL
 3、这里请教了师父，让我使用延迟生成，现在明白了一点，就是SpawnActor函数创建后就网络同步过去了，你有一些构造函数需要的初始化的东西还没修改过去，后面就只能RPC调用或者属性同步过去了
+4、生成弓箭的旋转偏移
+
+2022/11/3

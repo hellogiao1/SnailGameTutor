@@ -25,6 +25,8 @@
 #include "Engine/World.h"
 #include "Projectile/ProjectileItem.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Functionality/MyGameplayStatic.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
@@ -682,52 +684,122 @@ void AMyTutorTestCharacter::ServerLaunchProjectile_Implementation(UClass* SpawnC
 		UWorld* const World = GetWorld();
 		if (World != nullptr)
 		{
-			//生成箭的位置和旋转：在弓箭前方生成，避免和角色以及弓箭误碰
+			FHitResult OutHit;
+			TArray<FVector> OutPathPositions;
+			FVector OutLastTraceDestination;
+			FVector StartPos = bAimView == false ? Location : GetCameraArrowLevel();
+			float Speed = 4000.f;
+			FVector LaunchVelocity = Rotation.Vector() * Speed;
+			//预测箭的抛物线，获得最终到达的点位置，其中ECC_GameTraceChannel1对应的是项目设置的DamageTraceHit射线通道
+			bool bHit = UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), OutHit, OutPathPositions, OutLastTraceDestination,
+				StartPos, LaunchVelocity, true, 3.f, ECollisionChannel::ECC_GameTraceChannel2,
+				false, {}, EDrawDebugTrace::ForDuration, 1.f, 15.f, 6.f, 0.f);
+
+			FVector ArrowEndLocation = bHit ? OutHit.ImpactPoint : OutLastTraceDestination;
+			FVector ArrowStartLocation = Location;
+			FVector ArrowVelocity = CalcArrowVelocity(ArrowStartLocation, ArrowEndLocation, Speed);
+
 			const FRotator SpawnRotation = Rotation;
 			const FVector SpawnLocation = Location;
 
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			//AProjectileItem* SpawnedArrow = World->SpawnActorDeferred<AProjectileItem>(SpawnClass, FTransform(SpawnRotation, SpawnLocation), this);
+			//AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			AProjectileItem* SpawnedArrow = World->SpawnActorDeferred<AProjectileItem>(SpawnClass, FTransform(ArrowVelocity.ToOrientationRotator(), SpawnLocation), this);
 			if (SpawnedArrow)
 			{
 				SpawnedArrow->SetOwner(this);
 			}
 
-			FHitResult OutHit;
-			TArray<FVector> OutPathPositions;
-			FVector OutLastTraceDestination;
-			FVector StartPos = bAimView == false ? Location : GetCameraArrowLevel();
-			float Speed = 1000.f;
-			FVector LaunchVelocity = Rotation.Vector() * Speed;
-			//预测箭的抛物线，获得最终到达的点位置，其中ECC_GameTraceChannel1对应的是项目设置的DamageTraceHit射线通道
-			bool bHit = UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), OutHit, OutPathPositions, OutLastTraceDestination,
-				StartPos, LaunchVelocity, true, 3.f, ECollisionChannel::ECC_GameTraceChannel2,
-				false, {}, EDrawDebugTrace::None, 1.f, 15.f, 6.f, 0.f);
-
-			FVector ArrowEndLocation = bHit ? OutHit.ImpactPoint : OutLastTraceDestination;
-			FVector ArrowStartLocation = SpawnLocation;
-			FVector ArrowVelocity = CalcArrowVelocity(ArrowStartLocation, ArrowEndLocation, Speed);
 			if (SpawnedArrow && SpawnedArrow->ProjectileMove)
 			{
-				//SpawnedArrow->ProjectileMove->Velocity = ArrowVelocity;
-				SpawnedArrow->SetVelocity(ArrowVelocity);
+				SpawnedArrow->ProjectileMove->Velocity = ArrowVelocity;
+				//SpawnedArrow->SetVelocity(ArrowVelocity);
 			}
+			
 			//这里有问题：当你创建一个新的Actor的同时（比如在一个函数内），你将这个Actor作为RPC的参数传到客户端去执行，这时候你会发现客户端的RPC函数的参数为NULL
 			//因为RPC函数先执行，同步后执行
 			//MultSetArrowVelocity(SpawnedArrow, ArrowVelocity);
+			UGameplayStatics::FinishSpawningActor(SpawnedArrow, FTransform(ArrowVelocity.ToOrientationRotator(), SpawnLocation));
+			//UGameplayStatics::FinishSpawningActor(SpawnedArrow, FTransform(SpawnRotation, SpawnLocation));
 		}
 	}
 }
 
-void AMyTutorTestCharacter::BowLaunchProjectile(UClass* SpawnClass)
+bool AMyTutorTestCharacter::TraceTarget(FVector& OutTarget, float MaxTraceLen /*= 2000.f*/)
 {
-	const FRotator SpawnRotation = FollowCamera->GetComponentRotation();
-	const FVector SpawnLocation = LeftWeaponComp->GetComponentLocation() + FollowCamera->GetForwardVector() * 50;
+	if (FollowCamera == nullptr || CameraBoom == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Func[%s] ->TraceTarget failed"), *FString(__FUNCTION__));
+		return false;
+	}
 
-	ServerLaunchProjectile(SpawnClass, SpawnRotation, SpawnLocation, true);
+	FVector StarTracetLoc = FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector() * CameraBoom->TargetArmLength;
+	FVector EndTraceLoc = StarTracetLoc + FollowCamera->GetForwardVector() * MaxTraceLen;
+
+	TArray<FHitResult> OutHits;
+
+	bool bHit = UKismetSystemLibrary::LineTraceMulti(GetWorld(), StarTracetLoc, EndTraceLoc, UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel2), false, {}, EDrawDebugTrace::None, OutHits, true);
+	if (bHit)
+	{
+		float MinDistance = (EndTraceLoc - StarTracetLoc).Size();
+		bool bValidPos = false;
+		for (const auto& Hit : OutHits)
+		{
+			if (UMyGameplayStatic::IsTeam(Hit.GetActor(), this))
+			{
+				continue;
+			}
+
+			float TargetDistance = (Hit.Location - StarTracetLoc).Size();
+			if (MinDistance >= TargetDistance)
+			{
+				MinDistance = TargetDistance;
+				OutTarget = Hit.Location;
+			}
+
+			bValidPos = true;
+		}
+
+		if (bValidPos == false)
+		{
+			bHit = false;
+			OutTarget = EndTraceLoc;
+		}
+	}
+	else
+	{
+		OutTarget = EndTraceLoc;
+	}
+
+	return bHit;
+}
+
+void AMyTutorTestCharacter::BowLaunchProjectile(TSubclassOf<AProjectileItem> SpawnClass)
+{
+	UWorld* const World = GetWorld();
+	if (World != nullptr && SpawnClass != nullptr)
+	{
+		FVector SpawnLocation = LeftWeaponComp->GetComponentLocation();
+		FVector HitTarget;
+		bool bHit = TraceTarget(HitTarget);
+		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, HitTarget);
+		UKismetSystemLibrary::PrintString(GetWorld(), SpawnRotation.ToString());
+		SpawnRotation = FRotator(SpawnRotation.Pitch, SpawnRotation.Yaw, 0.f);
+		
+		/*AProjectileItem* SpawnedArrow = World->SpawnActorDeferred<AProjectileItem>(SpawnClass, FTransform(SpawnRotation, SpawnLocation), this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		UGameplayStatics::FinishSpawningActor(SpawnedArrow, FTransform(SpawnRotation, SpawnLocation));*/
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		if (SpawnedArrow && SpawnedArrow->ProjectileMove)
+		{
+			SpawnedArrow->SetOwner(this);
+			SpawnedArrow->ProjectileMove->Velocity = UKismetMathLibrary::Conv_RotatorToVector(SpawnRotation).GetSafeNormal() * 1000.f;
+			SpawnedArrow->Init(bHit, FollowCamera->GetComponentRotation());
+		}
+	}
 }
 
 FVector AMyTutorTestCharacter::GetCameraArrowLevel()

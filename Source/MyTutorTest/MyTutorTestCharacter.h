@@ -265,7 +265,10 @@ private:
 
 #pragma region SpawnActor
 public:
-	void BowLaunchProjectile(UClass* SpawnClass);
+	bool TraceTarget(FVector& OutTarget, float MaxTraceLen = 2000.f);
+
+	UFUNCTION(BlueprintCallable)
+	void BowLaunchProjectile(TSubclassOf<AProjectileItem> SpawnClass);
 
 	UFUNCTION(Server, Unreliable)
 	void ServerLaunchProjectile(UClass* SpawnClass, FRotator Rotation, FVector Location, bool bAimView = false);
