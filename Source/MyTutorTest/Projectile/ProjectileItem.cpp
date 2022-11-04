@@ -11,6 +11,7 @@
 #include "../MyTutorTestCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/MovementComponent.h"
+#include "GameFramework/DamageType.h"
 
 // Sets default values
 AProjectileItem::AProjectileItem()
@@ -89,10 +90,11 @@ void AProjectileItem::SetVelocity(FVector NewVelocity)
 	OnRep_ProjectileVelocity();
 }
 
-void AProjectileItem::Init(bool bMaxPath, FRotator EndRotation)
+void AProjectileItem::Init(bool bMaxPath, FRotator EndRotation, FVector EndLocation)
 {
 	bReachMaxPoint = bMaxPath;
 	RequireRotation = EndRotation;
+	RequireLocation = EndLocation;
 }
 
 void AProjectileItem::TraceObject()
@@ -136,13 +138,14 @@ void AProjectileItem::TraceObject()
 	else
 	{
 		//达到最远的点，则旋转抛射物为瞄准的方向
-		if (bReachMaxPoint)
+		if (bReachMaxPoint && GetActorLocation().Equals(RequireLocation, 20.f))
 		{
 			if (ProjectileMove)
 			{
 				ProjectileMove->ProjectileGravityScale = 0.3;
 				ProjectileMove->Velocity = RequireRotation.Vector() * ProjectileMove->Velocity.Size();
 			}
+			MultiAdjustment(0.3, RequireRotation.Vector() * ProjectileMove->Velocity.Size());
 		}
 	}
 }
@@ -236,6 +239,15 @@ void AProjectileItem::OnRep_ProjectileVelocity()
 	if (ProjectileMove)
 	{
 		ProjectileMove->Velocity = ProjectileVelocity;
+	}
+}
+
+void AProjectileItem::MultiAdjustment_Implementation(float Gravity, FVector Velocity)
+{
+	if (ProjectileMove)
+	{
+		ProjectileMove->ProjectileGravityScale = Gravity;
+		ProjectileMove->Velocity = Velocity;
 	}
 }
 

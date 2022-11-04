@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
+#include "Engine/Classes/Animation/AnimMontage.h"
 #include "EquipObject.generated.h"
 
 UCLASS()

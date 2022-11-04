@@ -56,6 +56,9 @@ private:
 	UFUNCTION()
 	void OnRep_ProjectileVelocity();
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MultiAdjustment(float Gravity, FVector Velocity);
+
 protected:
 	FTimerHandle DestroyTimeHandle;
 
@@ -79,10 +82,12 @@ private:
 
 	bool bReachMaxPoint = false;
 
+	FVector RequireLocation;
+
 	FRotator RequireRotation;
 
 	UPROPERTY(ReplicatedUsing = "OnRep_ProjectileVelocity")
 	FVector ProjectileVelocity;
 public:
-	void Init(bool bMaxPath, FRotator EndRotation);
+	void Init(bool bMaxPath, FRotator EndRotation, FVector EndLocation);
 };

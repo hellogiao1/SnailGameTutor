@@ -16,3 +16,10 @@ Error		'ServerLaunchProjectile' conflicts with 'Function /Script/MyTutorTest.MyT
 4、生成弓箭的旋转偏移
 
 2022/11/3
+1、
+
+
+2022/11/3
+1、开始做属性状态
+2、DataTableHandle，修改枚举值同时能修改RowName（当datatable选定以后，rowname参数会自动改变）可以重写virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override 
+不过这样什么修改都会调用，比较耗资源

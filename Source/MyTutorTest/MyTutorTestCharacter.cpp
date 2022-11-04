@@ -27,6 +27,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Functionality/MyGameplayStatic.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/StatusComponent.h"
 
 
 UAbilitySystemComponent* AMyTutorTestCharacter::GetAbilitySystemComponent() const
@@ -94,6 +95,9 @@ AMyTutorTestCharacter::AMyTutorTestCharacter()
 
 	TouchStartPos = FVector::ZeroVector;
 	TurnSpeed = -5.f;
+
+	//×´Ì¬×é¼þ
+	StatusComp = CreateDefaultSubobject<UStatusComponent>(TEXT("StatusComponent"));
 }
 
 void AMyTutorTestCharacter::SetRWeaponGeneOverlap(bool bInGeneraOverlap)
@@ -786,10 +790,7 @@ void AMyTutorTestCharacter::BowLaunchProjectile(TSubclassOf<AProjectileItem> Spa
 		bool bHit = TraceTarget(HitTarget);
 		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, HitTarget);
 		UKismetSystemLibrary::PrintString(GetWorld(), SpawnRotation.ToString());
-		SpawnRotation = FRotator(SpawnRotation.Pitch, SpawnRotation.Yaw, 0.f);
 		
-		/*AProjectileItem* SpawnedArrow = World->SpawnActorDeferred<AProjectileItem>(SpawnClass, FTransform(SpawnRotation, SpawnLocation), this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-		UGameplayStatics::FinishSpawningActor(SpawnedArrow, FTransform(SpawnRotation, SpawnLocation));*/
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		AProjectileItem* SpawnedArrow = World->SpawnActor<AProjectileItem>(SpawnClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
@@ -797,7 +798,7 @@ void AMyTutorTestCharacter::BowLaunchProjectile(TSubclassOf<AProjectileItem> Spa
 		{
 			SpawnedArrow->SetOwner(this);
 			SpawnedArrow->ProjectileMove->Velocity = UKismetMathLibrary::Conv_RotatorToVector(SpawnRotation).GetSafeNormal() * 1000.f;
-			SpawnedArrow->Init(bHit, FollowCamera->GetComponentRotation());
+			SpawnedArrow->Init(!bHit, FollowCamera->GetComponentRotation(), HitTarget);
 		}
 	}
 }

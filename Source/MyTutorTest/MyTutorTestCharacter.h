@@ -66,6 +66,9 @@ class AMyTutorTestCharacter : public AMyCharacterBase, public IAbilitySystemInte
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest", meta = (AllowPrivateAccess = "true"))
 	class UQuestComponent* QuestComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest", meta = (AllowPrivateAccess = "true"))
+	class UStatusComponent* StatusComp;
+
 #pragma region GAS
 private:
 	/** 添加Ability组件 */
