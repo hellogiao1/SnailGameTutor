@@ -26,6 +26,21 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+public:
+	/** FuncInterface  */
+	const FBasicProperty& GetBasicPropertyByName(EBasicStatus BasicStatus) const;
+	const FBasicProperty& GetBasicPropertyByName(FName BasicStatus) const;
+
+	const FDetailProperty& GetDetailPropertyByName(EDetailStatus DetailStatus) const;
+	const FDetailProperty& GetDetailPropertyByName(FName DetailStatus) const;
+
+	void SetBasicProperty(EBasicStatus BasicStatus, float NewValue);
+	void SetDetailProperty(EDetailStatus DetailStatus, float NewValue);
+	void SetDetailMaxProperty(EDetailStatus DetailStatus, float NewValue, bool bResetCurrValue = false);
+
+private:
+	void InitAttribute();
+
 private:
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	UDataTable* DTBaseStatus;
@@ -36,7 +51,7 @@ private:
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess))
 	UDataTable* DTAttrMappingStatus;
 
-	TArray<FBasicProperty*> BasicPropertys;
-	TArray<FDetailProperty*> DetailPropertys;
+	TMap<EBasicStatus, FBasicProperty> BasicPropertyMap;
+	TMap<EDetailStatus, FDetailProperty> DetailPropertyMap;
 	TArray<FAttributeMapping*> AttributeMappings;
 };

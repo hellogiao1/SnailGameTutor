@@ -50,14 +50,14 @@ struct FBasicProperty : public FTableRowBase
 	//当datatable选定以后，rowname参数会自动改变，不过比较耗资源，暂时不使用
 	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override
 	{
-		if (InDataTable == nullptr) return;
+		/*if (InDataTable == nullptr) return;
 
 		FBasicProperty* InStruct = InDataTable->FindRow<FBasicProperty>(InRowName, TEXT(""));
 		FName CurrName = StaticEnum<EBasicStatus>()->GetNameByIndex((int32)BasicName);
 		if (InStruct && CurrName != InRowName)
 		{
 			const_cast<UDataTable*>(InDataTable)->AddRow(CurrName, *InStruct);
-		}
+		}*/
 		/*UDataTable* DataTable = const_cast<UDataTable*>(InDataTable);
 		if (!DataTable) return;
 
@@ -86,6 +86,15 @@ struct FDetailProperty : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxValue;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", UIMin = "0", ForceUnits = "float/s"))
+	float RecoverSpeed;*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RecoverTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (SliderExponent))
+	float RecoverQuantity;
 };
 
 USTRUCT(BlueprintType)

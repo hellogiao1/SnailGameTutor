@@ -13,12 +13,16 @@ UStatusComponent::UStatusComponent()
 
 	if (DTBaseStatus)
 	{
-		DTBaseStatus->GetAllRows<FBasicProperty>(TEXT(""), BasicPropertys);
+		DTBaseStatus->ForeachRow<FBasicProperty>(TEXT(""), [&](const FName Name, const FBasicProperty& Property) {
+			BasicPropertyMap.Emplace(Property.BasicName, Property);
+			});
 	}
 
 	if (DTDetailStatus)
 	{
-		DTDetailStatus->GetAllRows<FDetailProperty>(TEXT(""), DetailPropertys);
+		DTDetailStatus->ForeachRow<FDetailProperty>(TEXT(""), [&](const FName Name, const FDetailProperty& Property) {
+			DetailPropertyMap.Emplace(Property.DetailName, Property);
+			});
 	}
 
 	if (DTAttrMappingStatus)
@@ -26,9 +30,26 @@ UStatusComponent::UStatusComponent()
 		DTAttrMappingStatus->GetAllRows<FAttributeMapping>(TEXT(""), AttributeMappings);
 	}
 
-	
+	InitAttribute();
 }
 
+void UStatusComponent::InitAttribute()
+{
+	if (BasicPropertyMap.IsEmpty() || DetailPropertyMap.IsEmpty() || AttributeMappings.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Func[%s] -> Init Attribute failed"), *FString(__FUNCTION__));
+		return;
+	}
+
+	for (const auto& Mapping : AttributeMappings)
+	{
+		FBasicProperty* Basic = Mapping->DataTableInfo.GetRow<FBasicProperty>(TEXT(""));
+		for (const auto& Detail : Mapping->Details)
+		{
+			SetDetailMaxProperty(Detail.DetailName, Detail.MaxValue * Basic->Value, true);
+		}
+	}
+}
 
 // Called when the game starts
 void UStatusComponent::BeginPlay()
@@ -49,5 +70,93 @@ void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+const FBasicProperty& UStatusComponent::GetBasicPropertyByName(EBasicStatus BasicStatus) const
+{
+	if (BasicPropertyMap.Contains(BasicStatus))
+	{
+		return *BasicPropertyMap.Find(BasicStatus);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Func[%s] -> Not Find Strtuct"), *FString(__FUNCTION__));
+		return FBasicProperty();
+	}
+
+}
+
+const FBasicProperty& UStatusComponent::GetBasicPropertyByName(FName BasicStatus) const
+{
+	EBasicStatus BasicEnum = static_cast<EBasicStatus>(StaticEnum<EBasicStatus>()->GetValueByName(BasicStatus));
+	GetBasicPropertyByName(BasicEnum);
+}
+
+const FDetailProperty& UStatusComponent::GetDetailPropertyByName(EDetailStatus DetailStatus) const
+{
+	if (DetailPropertyMap.Contains(DetailStatus))
+	{
+		return *DetailPropertyMap.Find(DetailStatus);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Func[%s] -> Not Find Strtuct"), *FString(__FUNCTION__));
+		return FDetailProperty();
+	}
+}
+
+const FDetailProperty& UStatusComponent::GetDetailPropertyByName(FName DetailStatus) const
+{
+	EDetailStatus DetailEnum = static_cast<EDetailStatus>(StaticEnum<EDetailStatus>()->GetValueByName(DetailStatus));
+	GetDetailPropertyByName(DetailEnum);
+}
+
+void UStatusComponent::SetBasicProperty(EBasicStatus BasicStatus, float NewValue)
+{
+	if (BasicPropertyMap.Contains(BasicStatus) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Func[%s] -> %d Not Find Property"), *FString(__FUNCTION__), BasicStatus);
+		return;
+	}
+
+	FBasicProperty* Basic = BasicPropertyMap.Find(BasicStatus);
+	if (Basic)
+	{
+		Basic->Value = NewValue;
+	}
+}
+
+void UStatusComponent::SetDetailProperty(EDetailStatus DetailStatus, float NewValue)
+{
+	if (DetailPropertyMap.Contains(DetailStatus) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Func[%s] -> %d Not Find Property"), *FString(__FUNCTION__), DetailStatus);
+		return;
+	}
+
+	FDetailProperty* Detail = DetailPropertyMap.Find(DetailStatus);
+	if (Detail)
+	{
+		Detail->CurrValue = NewValue;
+	}
+}
+
+void UStatusComponent::SetDetailMaxProperty(EDetailStatus DetailStatus, float NewValue, bool bResetCurrValue /*= false*/)
+{
+	if (DetailPropertyMap.Contains(DetailStatus) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Func[%s] -> %d Not Find Property"), *FString(__FUNCTION__), DetailStatus);
+		return;
+	}
+
+	FDetailProperty* Detail = DetailPropertyMap.Find(DetailStatus);
+	if (Detail)
+	{
+		Detail->MaxValue = NewValue;
+		if (bResetCurrValue)
+		{
+			Detail->CurrValue = NewValue;
+		}
+	}
 }
 
